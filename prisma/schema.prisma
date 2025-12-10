@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String      @id @default(uuid())
+  email      String      @unique
+  name       String      @unique
+  password   String
+  createdAt  DateTime    @default(now())
+  animations Animation[]
+}
+
+model Animation {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  prompt       String   @db.Text
+  code         String   @db.Text
+  videoUrl     String?
+  thumbnailUrl String?
+  duration     Float?
+  status       Status   @default(GENERATING)
+  errorMessage String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum Status {
+  GENERATING
+  COMPLETED
+  FAILED
+}
