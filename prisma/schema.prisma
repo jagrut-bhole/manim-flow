@@ -14,34 +14,57 @@ datasource db {
 }
 
 model User {
-  id         String      @id @default(uuid())
-  email      String      @unique
-  name       String      @unique
-  password   String
-  createdAt  DateTime    @default(now())
-  animations Animation[]
+  id            String  @id @default(cuid())
+  email         String  @unique
+  name          String? @unique
+  password      String
+  emailVerified Boolean @default(false)
+  
+  verificationCode String?
+  verificationCodeExpiry  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  animations       Animation[]
+
+  @@index([email])
 }
 
+
 model Animation {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id])
-  prompt       String   @db.Text
-  code         String   @db.Text
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  prompt String @db.Text
+  code   String @db.Text
+  model  String @default("llama-3.3-70b-versatile")
+
   videoUrl     String?
   thumbnailUrl String?
-  duration     Float?
-  status       Status   @default(GENERATING)
-  errorMessage String?  @db.Text
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+
+  duration Float?
+
+  view     Int @default(0)
+  download Int @default(0)
+
+  status       Status  @default(GENERATING)
+  errorMessage String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([status])
   @@index([createdAt])
+  @@index([userId, createdAt])
 }
 
 enum Status {
   GENERATING
+  RENDERING
   COMPLETED
   FAILED
 }
