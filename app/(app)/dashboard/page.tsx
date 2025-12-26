@@ -1,18 +1,16 @@
 "use client";
 
-
 import { User } from "next-auth";
 import { useSession } from "next-auth/react";
 import { PromptInput } from "@/components/PromptInput";
 import { useState } from "react";
-
 
 export default function DashboardPage() {
   const { data: session } = useSession();
 
   const user: User = session?.user;
 
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
 
   return (
     <div>
@@ -26,15 +24,10 @@ export default function DashboardPage() {
             {/* Build fully functional apps and websites through simple conversations */}
             {user?.name}
           </p>
-
         </div>
 
         <div className="w-full max-w-4xl space-y-4">
-          <PromptInput
-            value={inputText}
-            onChange={setInputText}
-          />
-
+          <PromptInput value={inputText} onChange={setInputText} />
         </div>
 
         <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-20">
@@ -45,4 +38,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

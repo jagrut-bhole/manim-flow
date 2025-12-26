@@ -1,11 +1,15 @@
+import { useState, useEffect } from "react";
 
-import { useState, useEffect } from 'react';
-
-export const useTypewriter = (phrases: string[], typingSpeed = 100, erasingSpeed = 50, delayBetween = 2000) => {
+export const useTypewriter = (
+  phrases: string[],
+  typingSpeed = 100,
+  erasingSpeed = 50,
+  delayBetween = 2000,
+) => {
   const [index, setIndex] = useState(0);
   const [subIndex, setSubIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
 
   useEffect(() => {
     if (index >= phrases.length) {
@@ -24,12 +28,23 @@ export const useTypewriter = (phrases: string[], typingSpeed = 100, erasingSpeed
       return;
     }
 
-    const timeout = setTimeout(() => {
-      setSubIndex((prev) => prev + (isDeleting ? -1 : 1));
-    }, isDeleting ? erasingSpeed : typingSpeed);
+    const timeout = setTimeout(
+      () => {
+        setSubIndex((prev) => prev + (isDeleting ? -1 : 1));
+      },
+      isDeleting ? erasingSpeed : typingSpeed,
+    );
 
     return () => clearTimeout(timeout);
-  }, [subIndex, index, isDeleting, phrases, typingSpeed, erasingSpeed, delayBetween]);
+  }, [
+    subIndex,
+    index,
+    isDeleting,
+    phrases,
+    typingSpeed,
+    erasingSpeed,
+    delayBetween,
+  ]);
 
   useEffect(() => {
     setText(phrases[index].substring(0, subIndex));
