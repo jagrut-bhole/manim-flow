@@ -102,7 +102,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({
           {/* Send Button */}
           <button
             disabled={!value.trim()}
-            className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold transition-all duration-300 outline-none
+            className={` cursor-pointer flex items-center gap-2 px-6 py-2 rounded-full font-semibold transition-all duration-300 outline-none
               ${
                 !value.trim()
                   ? "bg-neutral-800 text-neutral-600 cursor-not-allowed"

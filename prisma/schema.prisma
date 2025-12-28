@@ -19,18 +19,17 @@ model User {
   name          String? @unique
   password      String
   emailVerified Boolean @default(false)
-  
-  verificationCode String?
-  verificationCodeExpiry  DateTime?
+
+  verificationCode       String?
+  verificationCodeExpiry DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  animations       Animation[]
+  animations Animation[]
 
   @@index([email])
 }
-
 
 model Animation {
   id String @id @default(cuid())
