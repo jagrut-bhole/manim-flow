@@ -7,18 +7,26 @@ import { useTypewriter } from "../hooks/useTypewriter";
 interface PromptInputProps {
   value: string;
   onChange: (val: string) => void;
+  onSubmit?: () => void;
+  selectedModel?: AIModel;
+  onModelChange?: (model: AIModel) => void;
 }
 
 export const PromptInput: React.FC<PromptInputProps> = ({
   value,
   onChange,
+  onSubmit,
+  selectedModel,
+  onModelChange,
 }) => {
-  const [selectedModel, setSelectedModel] = useState<AIModel>(
+  const [internalSelectedModel, setInternalSelectedModel] = useState<AIModel>(
     AIModel.GROQ_OLLAMA,
   );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const typewriterText = useTypewriter(TYPEWRITER_PHRASES);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const activeModel = selectedModel || internalSelectedModel;
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -36,11 +44,30 @@ export const PromptInput: React.FC<PromptInputProps> = ({
 
   const handleModelSelect = (model: any) => {
     if (model.locked) return;
-    setSelectedModel(model.id);
+    if (onModelChange) {
+      onModelChange(model.id);
+    } else {
+      setInternalSelectedModel(model.id);
+    }
     setIsDropdownOpen(false);
   };
 
-  const currentModelData = MODELS.find((m) => m.id === selectedModel);
+  const currentModelData = MODELS.find((m) => m.id === activeModel);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (value.trim() && onSubmit) {
+        onSubmit();
+      }
+    }
+  };
+
+  const handleSubmit = () => {
+    if (value.trim() && onSubmit) {
+      onSubmit();
+    }
+  };
 
   return (
     <div className="relative w-full bg-[#111111] border border-neutral-800 rounded-[2rem] p-4 transition-all focus-within:border-neutral-700 hover:border-neutral-700 shadow-2xl">
@@ -49,6 +76,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({
         placeholder={typewriterText}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
@@ -76,7 +104,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({
                     onClick={() => handleModelSelect(model)}
                     className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all text-sm outline-none
                       ${model.locked ? "opacity-50 cursor-not-allowed" : "hover:bg-neutral-800"}
-                      ${selectedModel === model.id ? "bg-neutral-800" : ""}
+                      ${activeModel === model.id ? "bg-neutral-800" : ""}
                     `}
                   >
                     <div className="flex items-center gap-2.5 text-neutral-200">
@@ -102,6 +130,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({
           {/* Send Button */}
           <button
             disabled={!value.trim()}
+            onClick={handleSubmit}
             className={` cursor-pointer flex items-center gap-2 px-6 py-2 rounded-full font-semibold transition-all duration-300 outline-none
               ${
                 !value.trim()
