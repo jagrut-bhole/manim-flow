@@ -23,12 +23,12 @@ export async function POST(req: NextRequest) {
     const { prompt, provider } = await req.json();
 
     if (!prompt || typeof prompt !== "string") {
-      return (
-        NextResponse.json({
+      return NextResponse.json(
+        {
           success: false,
           message: "Invalid prompt",
-        }),
-        { status: 400 }
+        },
+        { status: 400 },
       );
     }
 
