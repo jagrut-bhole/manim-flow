@@ -1,12 +1,11 @@
-import { authOptions } from "@/lib/auth";
-import { getServerSession } from "next-auth";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { deleteMultipleFromS3 } from "@/lib/s3";
 import { NextResponse, NextRequest } from "next/server";
 
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json(

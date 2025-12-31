@@ -1,12 +1,12 @@
-import { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import prisma from "./prisma";
 import bcrypt from "bcryptjs";
 import { EmailServices } from "@/services/emailServices";
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
-    CredentialsProvider({
+    Credentials({
       id: "credentials",
       name: "Credentials",
       credentials: {
@@ -95,7 +95,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.emailVerified = !!user.emailVerified;
+        token.emailVerified = !!(user as any).emailVerified;
       }
       return token;
     },
@@ -104,7 +104,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
-        session.user.emailVerified = token.emailVerified as boolean;
+        (session.user as any).emailVerified = token.emailVerified as boolean;
       }
       return session;
     },
@@ -113,8 +113,9 @@ export const authOptions: NextAuthOptions = {
     signIn: "/signin",
   },
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
   },
-};
+});
