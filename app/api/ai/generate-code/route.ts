@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/options";
+import { authOptions } from "@/lib/auth";
 import { generateManimCode, LLMProvider } from "@/lib/llm/provider";
 import prisma from "@/lib/prisma";
 

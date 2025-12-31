@@ -1,4 +1,4 @@
-import { authOptions } from "../[...nextauth]/options";
+import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { deleteMultipleFromS3 } from "@/lib/s3";

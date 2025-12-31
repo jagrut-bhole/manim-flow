@@ -115,7 +115,9 @@ export default function VerifyCodePage() {
     <div className="flex min-h-screen justify-center items-center bg-[#030303]">
       <div className="space-y-2 bg-[#101010] py-15 px-30 rounded-4xl">
         <div>
-          <h1 className="text-white text-3xl font-bold mb-8">Verify Your Email</h1>
+          <h1 className="text-white text-3xl font-bold mb-8">
+            Verify Your Email
+          </h1>
         </div>
         <InputOTP
           maxLength={6}
@@ -132,7 +134,11 @@ export default function VerifyCodePage() {
           </InputOTPGroup>
         </InputOTP>
         <div className="flex justify-center mt-5">
-          <Button className="text-black bg-white py-5 px-6 hover:bg-white/80 cursor-pointer" disabled={loading} onClick={() => handleSubmit()}>
+          <Button
+            className="text-black bg-white py-5 px-6 hover:bg-white/80 cursor-pointer"
+            disabled={loading}
+            onClick={() => handleSubmit()}
+          >
             Submit
           </Button>
         </div>

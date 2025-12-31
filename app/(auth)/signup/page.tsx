@@ -72,7 +72,9 @@ export default function SignUpPage() {
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <Label className="text-white mb-1.5" htmlFor="name">Name</Label>
+                <Label className="text-white mb-1.5" htmlFor="name">
+                  Name
+                </Label>
                 <Input
                   id="name"
                   type="text"
@@ -84,7 +86,9 @@ export default function SignUpPage() {
                 />
               </div>
               <div>
-                <Label className="text-white mb-1.5" htmlFor="email">Email</Label>
+                <Label className="text-white mb-1.5" htmlFor="email">
+                  Email
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -96,7 +100,9 @@ export default function SignUpPage() {
                 />
               </div>
               <div>
-                <Label className="text-white mb-1.5" htmlFor="password">Password</Label>
+                <Label className="text-white mb-1.5" htmlFor="password">
+                  Password
+                </Label>
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
@@ -124,7 +130,11 @@ export default function SignUpPage() {
                 Must be at least 8 characters
               </p>
             </div>
-            <Button type="submit" disabled={loading} className="w-full mt-6 text-black bg-white hover:bg-white/80 cursor-pointer">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-6 text-black bg-white hover:bg-white/80 cursor-pointer"
+            >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
