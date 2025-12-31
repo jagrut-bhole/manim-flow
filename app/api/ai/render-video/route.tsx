@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         {
           success: false,
@@ -48,10 +48,8 @@ export async function POST(req: NextRequest) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        code,
-        quality,
-      }),
+      body: JSON.stringify({ code, quality }),
+      signal: AbortSignal.timeout(90000),
     });
 
     if (!response.ok) {
@@ -67,10 +65,8 @@ export async function POST(req: NextRequest) {
       },
       data: {
         status: "COMPLETED",
-        videoUrl: `${PYTHON_SERVICE_URL}${result.video_url}`,
-        thumbnailUrl: result.thumbnail_url
-          ? `${PYTHON_SERVICE_URL}${result.thumbnail_url}`
-          : null,
+        videoUrl: result.video_url,
+        thumbnailUrl: result.thumbnail_url,
         duration: result.duration,
       },
     });
@@ -81,10 +77,8 @@ export async function POST(req: NextRequest) {
         message: "Video rendered successfully",
         data: {
           animationId,
-          videoUrl: `${PYTHON_SERVICE_URL}${result.video_url}`,
-          thumbnailUrl: result.thumbnail_url
-            ? `${PYTHON_SERVICE_URL}${result.thumbnail_url}`
-            : null,
+          videoUrl: result.video_url,
+          thumbnailUrl: result.thumbnail_url,
           duration: result.duration,
         },
       },

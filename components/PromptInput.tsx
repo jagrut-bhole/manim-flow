@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, Settings2, Lock } from "lucide-react";
+import { ChevronDown, Lock, Sparkles, Info } from "lucide-react";
 import { AIModel } from "../types/AiModels";
 import { MODELS, TYPEWRITER_PHRASES } from "../constants/constants";
 import { useTypewriter } from "../hooks/useTypewriter";
@@ -10,6 +10,8 @@ interface PromptInputProps {
   onSubmit?: () => void;
   selectedModel?: AIModel;
   onModelChange?: (model: AIModel) => void;
+  onInfoClick?: () => void;
+  onSuggestionClick?: () => void;
 }
 
 export const PromptInput: React.FC<PromptInputProps> = ({
@@ -18,6 +20,8 @@ export const PromptInput: React.FC<PromptInputProps> = ({
   onSubmit,
   selectedModel,
   onModelChange,
+  onInfoClick,
+  onSuggestionClick,
 }) => {
   const [internalSelectedModel, setInternalSelectedModel] = useState<AIModel>(
     AIModel.GROQ_OLLAMA,
@@ -28,7 +32,6 @@ export const PromptInput: React.FC<PromptInputProps> = ({
 
   const activeModel = selectedModel || internalSelectedModel;
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -121,10 +124,21 @@ export const PromptInput: React.FC<PromptInputProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Settings Icon */}
-          <button className="p-2.5 rounded-full hover:bg-neutral-800 text-neutral-400 transition-colors outline-none">
-            <Settings2 size={18} />
+        <div className="flex items-center gap-3 justify-center">
+          {/* Info Icon */}
+          <button
+            onClick={onInfoClick}
+            className="p-1 mt-1 hover:cursor-pointer flex justify-center items-center rounded-full hover:bg-neutral-800 text-neutral-400 transition-colors outline-none"
+          >
+            <Info size={18} />
+          </button>
+
+          <button
+            onClick={onSuggestionClick}
+            className="p-2 cursor-pointer flex gap-2 justify-center items-center rounded-full hover:bg-neutral-800 text-neutral-400 transition-colors outline-none"
+          >
+            <Sparkles size={18} />
+            <span>Suggest Me</span>
           </button>
 
           {/* Send Button */}

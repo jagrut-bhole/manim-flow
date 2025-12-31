@@ -59,12 +59,12 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="overflow-y-hidden">
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
-            <p className="mt-2 text-sm text-gray-600">
+    <div className="overflow-y-hidden bg-[#030303]">
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-md w-full space-y-8 bg-[#101010] rounded-4xl py-20 px-8">
+          <div className="text-center ">
+            <h2 className="text-3xl font-bold text-white">Create Account</h2>
+            <p className="mt-2 text-sm text-gray-400">
               Get started by creating your account below.
             </p>
           </div>
@@ -72,7 +72,7 @@ export default function SignUpPage() {
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Name</Label>
+                <Label className="text-white mb-1.5" htmlFor="name">Name</Label>
                 <Input
                   id="name"
                   type="text"
@@ -80,10 +80,11 @@ export default function SignUpPage() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your Name"
                   required
+                  className="text-white"
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label className="text-white mb-1.5" htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -91,10 +92,11 @@ export default function SignUpPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Your Email"
                   required
+                  className="text-white"
                 />
               </div>
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label className="text-white mb-1.5" htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
@@ -103,6 +105,7 @@ export default function SignUpPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Your Password"
                   required
+                  className="text-white"
                 />
                 <button
                   type="button"
@@ -117,11 +120,11 @@ export default function SignUpPage() {
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gray-300">
                 Must be at least 8 characters
               </p>
             </div>
-            <Button type="submit" disabled={loading} className="w-full mt-6">
+            <Button type="submit" disabled={loading} className="w-full mt-6 text-black bg-white hover:bg-white/80 cursor-pointer">
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -132,10 +135,10 @@ export default function SignUpPage() {
               )}
             </Button>
             <div className="text-center text-sm mt-5">
-              <span className="text-gray-600">Already have an account? </span>
+              <span className="text-gray-400">Already have an account? </span>
               <Link
                 href="/signin"
-                className="font-medium text-black hover:text-gray-600"
+                className="font-medium text-white hover:text-gray-300"
               >
                 Sign in
               </Link>

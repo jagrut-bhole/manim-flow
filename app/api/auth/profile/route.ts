@@ -21,18 +21,36 @@ export async function GET(req: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: {
-        id: session?.user?.id,
+        id: session.user.id,
       },
-      include: {
+      select: {
         animations: {
+          where: {
+            AND: [
+              {
+                videoUrl: {
+                  not: null,
+                },
+              },
+              {
+                status: "COMPLETED",
+              },
+            ],
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
           select: {
             id: true,
+            prompt: true,
             code: true,
             videoUrl: true,
-            createdAt: true,
             thumbnailUrl: true,
-            model: true,
             duration: true,
+            createdAt: true,
+            model: true,
+            like: true,
+            download: true,
           },
         },
       },

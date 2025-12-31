@@ -135,9 +135,9 @@ export const VideoThumbnail = ({
       >
         <motion.div
           style={{ x, y, opacity }}
-          className="pointer-events-none absolute z-20 flex w-fit -translate-x-1/2 -translate-y-1/2 select-none items-center justify-center gap-2 rounded-full bg-primary/90 px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg"
+          className="pointer-events-none absolute z-20 flex -translate-x-1/2 -translate-y-1/2 select-none items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-black shadow-lg"
         >
-          <Play className="size-4 fill-current" /> Play
+          <Play className="size-4 fill-black" /> Play
         </motion.div>
         <video
           autoPlay
@@ -145,11 +145,10 @@ export const VideoThumbnail = ({
           playsInline
           loop
           poster={poster}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         >
           <source src={src} type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-linear-to-t from-background/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       </div>
     </>
   );
@@ -169,7 +168,7 @@ const VideoPopOver = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="absolute left-0 top-0 h-full w-full bg-background/95 backdrop-blur-xl"
+        className="absolute left-0 top-0 h-full w-full bg-black/90 backdrop-blur-md"
         onClick={() => setShowVideoPopOver(false)}
       />
       <motion.div
@@ -205,7 +204,7 @@ const VideoPopOver = ({
 
           <button
             onClick={() => setShowVideoPopOver(false)}
-            className="absolute right-3 top-3 z-10 rounded-full bg-background/50 p-2 backdrop-blur-sm transition-colors hover:bg-background/80"
+            className="absolute right-3 top-3 z-10 rounded-full bg-background/50 p-2 backdrop-blur-sm transition-colors"
           >
             <Plus className="size-5 rotate-45 text-foreground" />
           </button>

@@ -13,6 +13,10 @@ import { toast } from "sonner";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import Navbar from "@/components/Navbar";
+
+import { PromptSuggestions } from "@/components/PromptSuggestions";
+import { PromptWarning } from "@/components/PromptWarning";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -29,6 +33,32 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+
+  const [showWarningModal, setShowWarningModal] = useState<boolean>(false);
+
+  const handleInfoClick = () => {
+    setShowWarningModal(true);
+  };
+
+  const handleSuggestionClick = () => {
+    const suggestions = PromptSuggestions()[0].prompts;
+    const randomIndex = Math.floor(Math.random() * suggestions.length);
+    const selectedPrompt = suggestions[randomIndex];
+
+    setIsTyping(true);
+    setInputText("");
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i <= selectedPrompt.length) {
+        setInputText(selectedPrompt.slice(0, i));
+        i++;
+      } else {
+        clearInterval(interval);
+        setIsTyping(false);
+      }
+    }, 30);
+  };
 
   const handleSubmit = async () => {
     if (!inputText.trim()) {
@@ -105,6 +135,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-black text-white overflow-x-hidden">
+      <Navbar />
       {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-20">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px]" />
@@ -143,6 +174,8 @@ export default function DashboardPage() {
                   onSubmit={handleSubmit}
                   selectedModel={selectedModel}
                   onModelChange={setSelectedModel}
+                  onInfoClick={handleInfoClick}
+                  onSuggestionClick={handleSuggestionClick}
                 />
               </motion.div>
             </motion.div>
@@ -229,6 +262,48 @@ export default function DashboardPage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* PromptWarning Modal */}
+      <AnimatePresence>
+        {showWarningModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setShowWarningModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 20 }}
+              className="relative bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowWarningModal(false)}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors z-10"
+              >
+                <svg
+                  className="w-5 h-5 text-neutral-600 dark:text-neutral-400"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+              <div className="p-6">
+                <PromptWarning />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

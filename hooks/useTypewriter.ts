@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 export const useTypewriter = (
   phrases: string[],
-  typingSpeed = 100,
+  typingSpeed = 50,
   erasingSpeed = 50,
   delayBetween = 2000,
 ) => {

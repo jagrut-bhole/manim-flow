@@ -35,7 +35,7 @@ model Animation {
   id String @id @default(cuid())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   prompt String @db.Text
   code   String @db.Text
@@ -45,6 +45,8 @@ model Animation {
   thumbnailUrl String?
 
   duration Float?
+
+  forGallery Boolean @default(false)
 
   like     Int @default(0)
   download Int @default(0)

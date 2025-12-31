@@ -1,26 +1,31 @@
-# main.py
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
+from dotenv import load_dotenv
 from validator import validate_code, extract_scene_name
 from executor import execute_manim_code, cleanup_temp_dir
+from s3_uploader import S3Uploader 
+
+load_dotenv()
 
 app = FastAPI(title="Manim Renderer Service")
 
-# CORS - allow Next.js to call this API
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Initialize S3 uploader
+s3_uploader = S3Uploader()  # Add this
+
 class RenderRequest(BaseModel):
     code: str
-    quality: str = "l"  # l, m, h
+    quality: str = "l"
 
 class RenderResponse(BaseModel):
     success: bool
@@ -32,11 +37,7 @@ class RenderResponse(BaseModel):
 
 @app.get("/")
 def root():
-    return {
-        "service": "Manim Renderer",
-        "status": "running",
-        "version": "1.0.0"
-    }
+    return {"service": "Manim Renderer", "status": "running"}
 
 @app.get("/health")
 def health_check():
@@ -44,26 +45,20 @@ def health_check():
 
 @app.post("/execute", response_model=RenderResponse)
 async def execute_code(request: RenderRequest):
-    """
-    Execute Manim code and return video
-    """
+    """Execute Manim code and upload to S3"""
     
-    # Validate code
+    # Validate
     is_valid, error_msg = validate_code(request.code)
     if not is_valid:
         raise HTTPException(status_code=400, detail=error_msg)
     
-    # Extract scene name
     scene_name = extract_scene_name(request.code)
     if not scene_name:
-        raise HTTPException(
-            status_code=400,
-            detail="Could not find Scene class name in code"
-        )
+        raise HTTPException(status_code=400, detail="Scene class not found")
     
     print(f"Executing scene: {scene_name}")
     
-    # Execute code
+    # Execute
     result = execute_manim_code(
         code=request.code,
         scene_name=scene_name,
@@ -73,57 +68,35 @@ async def execute_code(request: RenderRequest):
     if not result['success']:
         raise HTTPException(status_code=500, detail=result['error'])
     
-    # Read video file
     video_path = result['video_path']
+    thumbnail_path = result.get('thumbnail_path')
     temp_dir = result['temp_dir']
     
     try:
-        # Read video as bytes
-        with open(video_path, 'rb') as f:
-            video_bytes = f.read()
+        # Upload to S3
+        print("Uploading to S3...")
+        upload_result = s3_uploader.upload_video_and_thumbnail(
+            video_path=video_path,
+            thumbnail_path=thumbnail_path
+        )
         
-        # Read thumbnail if exists
-        thumbnail_bytes = None
-        if result.get('thumbnail_path'):
-            with open(result['thumbnail_path'], 'rb') as f:
-                thumbnail_bytes = f.read()
-        
-        # For now, we'll return the video directly
-        # Later, you'll upload to S3 and return URL
-        
-        # Save to static folder temporarily (for testing)
-        output_dir = "output"
-        os.makedirs(output_dir, exist_ok=True)
-        
-        output_video = os.path.join(output_dir, f"{scene_name}.mp4")
-        with open(output_video, 'wb') as f:
-            f.write(video_bytes)
-        
-        output_thumb = None
-        if thumbnail_bytes:
-            output_thumb = os.path.join(output_dir, f"{scene_name}_thumb.png")
-            with open(output_thumb, 'wb') as f:
-                f.write(thumbnail_bytes)
+        print(f"Upload complete! Video: {upload_result['video_url']}")
         
         return RenderResponse(
             success=True,
-            message="Video rendered successfully",
-            video_url=f"/video/{scene_name}.mp4",
-            thumbnail_url=f"/video/{scene_name}_thumb.png" if output_thumb else None,
+            message="Video rendered and uploaded successfully",
+            video_url=upload_result['video_url'],
+            thumbnail_url=upload_result.get('thumbnail_url'),
             duration=result.get('duration', 0)
         )
         
+    except Exception as e:
+        print(f"Upload error: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+        
     finally:
-        # Cleanup temp directory
+        # Cleanup
         cleanup_temp_dir(temp_dir)
-
-@app.get("/video/{filename}")
-async def get_video(filename: str):
-    """Serve rendered video"""
-    file_path = os.path.join("output", filename)
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="Video not found")
-    return FileResponse(file_path)
 
 if __name__ == "__main__":
     import uvicorn

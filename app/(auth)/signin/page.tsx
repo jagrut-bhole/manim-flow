@@ -68,16 +68,17 @@ export default function SignInPage() {
     }
   };
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">
-            Sign In to Your Account
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Welcome back! Please enter your details.
-          </p>
-        </div>
+    <div className="overflow-y-hidden bg-[#030303]">
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-md w-full space-y-8 bg-[#101010] rounded-4xl py-20 px-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-white">
+              Sign In to Your Account
+            </h2>
+            <p className="mt-2 text-sm text-gray-400">
+              Welcome back! Please enter your details.
+            </p>
+          </div>
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-6">
@@ -91,6 +92,7 @@ export default function SignInPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="Enter your email..."
+                  className="text-white"
               />
             </div>
 
@@ -105,24 +107,25 @@ export default function SignInPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="••••••••"
+                  className="text-white"
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-200 hover:text-gray-400 transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-5 w-5 cursor-pointer" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-5 w-5 cursor-pointer" />
                   )}
                 </button>
               </div>
             </div>
           </div>
-          <Button type="submit" disabled={loading} className="w-full mt-6">
+          <Button type="submit" disabled={loading} className="w-full mt-6 text-black bg-white hover:bg-white/80 cursor-pointer">
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -133,16 +136,17 @@ export default function SignInPage() {
             )}
           </Button>
           <div className="text-center text-sm mt-5">
-            <span className="text-gray-600">Don&apos;t have an account? </span>
+            <span className="text-gray-400">Don&apos;t have an account? </span>
             <Link
               href="/signup"
-              className="font-medium text-black hover:text-gray-600"
+              className="font-medium text-white hover:text-gray-300"
             >
               Sign Up
             </Link>
           </div>
         </form>
       </div>
+    </div>
     </div>
   );
 }

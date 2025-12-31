@@ -112,33 +112,36 @@ export default function VerifyCodePage() {
     }
   }
   return (
-    <div className="flex min-h-screen justify-center items-center">
-      <div className="space-y-2">
+    <div className="flex min-h-screen justify-center items-center bg-[#030303]">
+      <div className="space-y-2 bg-[#101010] py-15 px-30 rounded-4xl">
+        <div>
+          <h1 className="text-white text-3xl font-bold mb-8">Verify Your Email</h1>
+        </div>
         <InputOTP
           maxLength={6}
           value={value}
           onChange={(value) => setValue(value)}
         >
           <InputOTPGroup>
-            <InputOTPSlot index={0} />
-            <InputOTPSlot index={1} />
-            <InputOTPSlot index={2} />
-            <InputOTPSlot index={3} />
-            <InputOTPSlot index={4} />
-            <InputOTPSlot index={5} />
+            <InputOTPSlot className="text-white" index={0} />
+            <InputOTPSlot className="text-white" index={1} />
+            <InputOTPSlot className="text-white" index={2} />
+            <InputOTPSlot className="text-white" index={3} />
+            <InputOTPSlot className="text-white" index={4} />
+            <InputOTPSlot className="text-white" index={5} />
           </InputOTPGroup>
         </InputOTP>
         <div className="flex justify-center mt-5">
-          <Button disabled={loading} onClick={() => handleSubmit()}>
+          <Button className="text-black bg-white py-5 px-6 hover:bg-white/80 cursor-pointer" disabled={loading} onClick={() => handleSubmit()}>
             Submit
           </Button>
         </div>
-        <div className="text-center text-sm mt-5">
+        <div className="text-center text-white text-sm mt-5">
           Didn&apos;t receive the code?{" "}
           <button
             disabled={loading}
             onClick={() => handleResetCodeButton()}
-            className="text-blue-600 hover:underline"
+            className="text-blue-600 hover:underline cursor-pointer"
           >
             Resend Code
           </button>

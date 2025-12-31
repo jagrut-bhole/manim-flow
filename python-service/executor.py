@@ -56,13 +56,41 @@ def execute_manim_code(code: str, scene_name: str, quality: str = "l") -> dict:
             cwd=temp_dir
         )
         
+        print(f"Manim execution completed with return code: {result.returncode}")
+        if result.stdout:
+            print(f"STDOUT: {result.stdout[:200]}")
+        if result.stderr:
+            print(f"STDERR (first 300 chars): {result.stderr[:300]}")
+        
         if result.returncode != 0:
-            error_msg = result.stderr or result.stdout
-            print(f"Manim error: {error_msg}")
-            return {
-                'success': False,
-                'error': f"Manim rendering failed: {error_msg[:500]}"
-            }
+            stderr = result.stderr or ""
+
+            # Filter out progress bars and other non-error output
+            error_lines = []
+            for line in stderr.split('\n'):
+                line = line.strip()
+                # Skip empty lines
+                if not line:
+                    continue
+                # Skip progress bar lines
+                if any(indicator in line for indicator in ['Animation', '%|', 'it/s', '█', '▏', '▎', '▍', '▌', '▋', '▊', '▉']):
+                    continue
+                # Skip lines that are just whitespace or progress indicators
+                if all(c in ' \r\n\t' for c in line):
+                    continue
+                error_lines.append(line)
+
+            # Only treat as error if there are actual error messages
+            if error_lines:
+                error_msg = '\n'.join(error_lines)
+                print(f"Manim error: {error_msg}")
+                return {
+                    'success': False,
+                    'error': f"Manim rendering failed: {error_msg[:500]}"
+                }
+            
+            # If returncode != 0 but no meaningful errors, log and continue
+            print(f"Warning: Manim returned code {result.returncode} but no clear errors found")
         
         # Find generated video
         # Manim outputs to: temp_dir/videos/scene/quality/SceneName.mp4

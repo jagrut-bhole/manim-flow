@@ -20,7 +20,7 @@ export async function generateWithGroq(userPrompt: string) {
       ],
       model: "llama-3.3-70b-versatile",
       temperature: 0.7,
-      max_tokens: 2048,
+      max_tokens: 4096,
       top_p: 1,
       stream: false,
     });

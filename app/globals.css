@@ -122,8 +122,14 @@
   body {
     @apply bg-background text-foreground;
   }
+  :root {
+    --border: 240 10% 18%;
+    --background: 240 10% 4%;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
 }
-
 
 /* Custom scrollbar styles */
 .custom-scrollbar::-webkit-scrollbar {

@@ -1,6 +1,7 @@
 import { Editor } from "@monaco-editor/react";
-import { X } from "lucide-react";
+import { X, Copy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 interface EditorViewProps {
   code: string;
@@ -15,6 +16,11 @@ export const EditorView: React.FC<EditorViewProps> = ({
   onClose,
   fileName = "MathVisual.py",
 }) => {
+  const handleCopyCode = async () => {
+    await navigator.clipboard.writeText(code);
+    toast.success("Code copied to clipboard!");
+  };
+
   const EditorContent = (
     <div
       className={`${isOpen ? "h-[80vh] w-[90vw] max-w-6xl" : "h-160"} bg-[#111111] border border-neutral-800 rounded-2xl overflow-hidden flex flex-col shadow-2xl`}
@@ -36,6 +42,13 @@ export const EditorView: React.FC<EditorViewProps> = ({
           </div>
         </div>
         <div className="flex gap-2 items-center">
+          <button
+            onClick={handleCopyCode}
+            className="px-3 py-1.5 text-xs font-medium text-white bg-neutral-800 hover:bg-neutral-700 rounded-md transition-colors flex items-center gap-2"
+          >
+            <Copy size={12} />
+            Copy Code
+          </button>
           <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
           {onClose && (
             <button
