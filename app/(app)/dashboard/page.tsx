@@ -159,9 +159,6 @@ export default function DashboardPage() {
                 <h1 className="text-6xl font-semibold tracking-tight mb-4 bg-clip-text text-transparent bg-linear-to-b from-white via-white to-neutral-500">
                   Where ideas become reality
                 </h1>
-                <p className="text-neutral-500 text-lg font-medium mb-5">
-                  {user?.name}
-                </p>
               </motion.div>
 
               <motion.div
@@ -188,7 +185,7 @@ export default function DashboardPage() {
               transition={{ duration: 0.5 }}
             >
               {/* Top Bar with Compact Prompt */}
-              <div className="flex justify-end mb-8">
+              <div className="flex justify-end mb-8 mt-15">
                 <motion.div
                   layoutId="prompt-container"
                   className="bg-[#111111] border border-neutral-800 rounded-full px-6 py-3 flex items-center gap-4 shadow-xl"

@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 # Initialize S3 uploader
-s3_uploader = S3Uploader()  # Add this
+s3_uploader = S3Uploader() 
 
 class RenderRequest(BaseModel):
     code: str
