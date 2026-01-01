@@ -25,17 +25,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/signin", request.url));
   }
 
-  // check of result, it should be accessed only from the playground and result pages.
-  if (session && url.pathname.match(/^\/result\/[^/]+$/)) {
-    const referer = request.headers.get("referer");
-    const isFromPlayground = referer?.includes("/playground");
-    const isFromResult = referer?.includes("/result");
-
-    if (!referer || (!isFromPlayground && !isFromResult)) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-  }
-
   return NextResponse.next();
 }
 
