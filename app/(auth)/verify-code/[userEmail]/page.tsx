@@ -61,34 +61,40 @@ export default function VerifyCodePage() {
       if (result.data.success) {
         toast.success("Email verified successfully!");
 
-        // Check if we have a temporary password (from signup flow)
+        // Check if we have a temporary password (from signup/signin flow)
         const tempPassword = sessionStorage.getItem("temp_signup_password");
+        console.log("Temp password exists:", !!tempPassword);
+        console.log("User email from params:", params.userEmail);
 
         if (tempPassword && params.userEmail) {
           // Auto-login the user
-          toast.loading("Signing you in...");
+          const loadingToast = toast.loading("Signing you in...");
 
           const signInResult = await signIn("credentials", {
-            email: params.userEmail,
+            email: decodeURIComponent(params.userEmail),
             password: tempPassword,
             redirect: false,
           });
 
+          console.log("Sign in result:", signInResult);
+
           // Clear the temporary password
           sessionStorage.removeItem("temp_signup_password");
 
-          if (signInResult?.ok) {
-            toast.dismiss();
+          if (signInResult?.ok && !signInResult?.error) {
+            toast.dismiss(loadingToast);
             toast.success("Successfully signed in!");
             router.replace("/dashboard");
           } else {
-            toast.dismiss();
-            toast.info("Please sign in with your credentials");
+            toast.dismiss(loadingToast);
+            console.error("Auto-login failed:", signInResult?.error);
+            toast.error("Auto-login failed. Please sign in manually.");
             router.replace("/signin");
           }
         } else {
-          // User came from signin attempt, redirect to signin
-          toast.info("Please sign in with your credentials");
+          // No password found - redirect to signin
+          console.log("No temp password found in sessionStorage");
+          toast.info("Verification successful! Please sign in.");
           router.replace("/signin");
         }
       }

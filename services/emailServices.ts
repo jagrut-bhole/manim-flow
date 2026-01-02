@@ -51,7 +51,7 @@ export class EmailServices {
         subject: subject,
         html: html,
       });
-      console.log("Email sent: ", info.messageId);
+      // console.log("Email sent: ", info.messageId);
       return {
         success: true,
         message: info.messageId,
