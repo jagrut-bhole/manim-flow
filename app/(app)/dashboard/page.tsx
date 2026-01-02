@@ -116,19 +116,20 @@ export default function DashboardPage() {
       });
 
       if (response.data.success) {
-        toast.success("Video rendered successfully!");
+        toast.success("Video rendering started! Redirecting to status page...");
+        // Navigate to result page which will handle polling
         router.push(`/result/${animationId}`);
       } else {
-        throw new Error(response.data.message || "Failed to render video");
+        throw new Error(response.data.message || "Failed to start video rendering");
       }
     } catch (error: any) {
       console.error("Render Video Error: ", error);
       const errorMsg =
-        error.response?.data?.message || "Failed to render the video.";
+        error.response?.data?.message || "Failed to start video rendering.";
       toast.error(errorMsg);
-    } finally {
       setIsLoading(false);
     }
+    // Don't set isLoading to false here - we're navigating away
   };
 
   const selectedModelData = MODELS.find((m) => m.id === selectedModel);

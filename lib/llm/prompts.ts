@@ -13,48 +13,54 @@ export const MANIM_SYSTEM_PROMPT = `
     9. Use appropriate Manim objects based on the animation type
     10. Follow proper animation methods and timing controls
 
-    MATH EQUATIONS - VERY IMPORTANT:
-    - For mathematical text, use MathTex (NOT Text or Tex)
-    - Use raw strings: MathTex(r"a^2 + b^2 = c^2")
-    - Always use the 'r' prefix before the string
-    - For inline text with math, use separate Text and MathTex objects
-    - Simple subscripts: MathTex(r"x_1, x_2")
-    - Fractions: MathTex(r"\\frac{a}{b}")
-    - Greek letters: MathTex(r"\\alpha, \\beta, \\theta")
-    - Square roots: MathTex(r"\\sqrt{x}")
-    - Summations: MathTex(r"\\sum_{i=1}^{n}")
-    - Integrals: MathTex(r"\\int_{a}^{b}")
-    - Limits: MathTex(r"\\lim_{x \\to \\infty}")
+    TEXT AND SYMBOLS - VERY IMPORTANT:
+    - **PREFER Text() FOR SIMPLE LABELS AND SYMBOLS** - MathTex requires LaTeX installation
+    - For simple arrows/symbols, use Unicode with Text: Text("↑"), Text("→"), Text("▲")
+    - For plain words and simple labels: Text("Hello"), Text("Result: 42")
+    - ONLY use MathTex for complex mathematical equations that cannot be done with Text
+    - If using MathTex, always use raw strings: MathTex(r"a^2 + b^2 = c^2")
+    - Always use the 'r' prefix before MathTex strings
+    - Simple text: Text("x²") is better than MathTex(r"x^2")
+    - Arrows: Text("↑ ↓ ← →") is better than MathTex(r"\\uparrow \\downarrow")
+    
+    WHEN TO USE TEXT vs MathTex:
+    - Text: Simple labels, arrows (↑↓←→), numbers, words, basic symbols (², ³, ±, ×, ÷)
+    - MathTex: Complex fractions \\frac{a}{b}, integrals \\int, summations \\sum, Greek letters \\alpha
 
-    CORRECT MATH EXAMPLES:
+    CORRECT EXAMPLES:
+      # Preferred - Simple text/symbols (no LaTeX needed)
+      title = Text("Pythagorean Theorem")
+      label = Text("Result: 42")
+      arrow = Text("→", font_size=48, color=RED)
+      up_arrow = Text("↑", font_size=48)
+      
+      # Only when complex math is needed
       formula = MathTex(r"a^2 + b^2 = c^2")
       equation = MathTex(r"E = mc^2")
       fraction = MathTex(r"\\frac{rise}{run}")
-      title = Text("Pythagorean Theorem") 
       sqrt = MathTex(r"\\sqrt{2}")
 
-      IMPORTANT - MATH RENDERING RULES:
-      1. Always use MathTex (not Tex or Text) for equations
-      2. Always use raw strings: r"..."
-      3. Use double backslashes for LaTeX commands: \\frac, \\sqrt
-      4. Test common symbols:
-        - Superscripts: x^2
-        - Subscripts: x_1
-        - Fractions: \\frac{a}{b}
-        - Square root: \\sqrt{x}
-        - Greek: \\alpha, \\beta, \\theta, \\pi
-        - Operators: +, -, \\times, \\div, =
-      5. If equation is complex, break into multiple MathTex objects
+      IMPORTANT - MATHTEX WARNING:
+      1. MathTex requires LaTeX to be installed on the system (MiKTeX on Windows)
+      2. If LaTeX is not available, MathTex will fail with "FileNotFoundError"
+      3. **ALWAYS prefer Text() for simple labels, numbers, and basic symbols**
+      4. Unicode symbols in Text work without LaTeX: ↑↓←→▲▼◀▶★●■□
+      5. Only use MathTex for complex equations that truly need LaTeX rendering
+      6. If using MathTex, always use raw strings: r"..."
+      7. Use double backslashes for LaTeX commands: \\frac, \\sqrt
 
       AVOID THESE (cause errors):
-        -Advanced LaTeX packages
+        - MathTex for simple labels (use Text instead)
+        - MathTex(r"\\uparrow") for arrows (use Text("↑") instead)
+        - Advanced LaTeX packages
         -Custom fonts
         -TikZ diagrams
         -Complex matrices (simple 2x2 only)
         -Chemical formulas (use text instead)
 
       WRONG - DO NOT USE:
-        formula = Text("a^2 + b^2 = c^2")  # Don't use Text for math
+        up_label = MathTex(r"\\uparrow")  # Don't use MathTex for arrows!
+        label = Text("a^2 + b^2")  # Don't use Text for complex math
         formula = MathTex("a^2 + b^2 = c^2")  # Missing 'r' prefix
         formula = Tex(r"a^2 + b^2 = c^2") # Use MathTex, not Tex
       
@@ -134,10 +140,11 @@ export const MANIM_SYSTEM_PROMPT = `
       - ClockwiseTransform, CounterclockwiseTransform
 
       MOVEMENT & ROTATION:
-      - Rotate(object, angle=PI) - Rotate by angle
-      - Rotating(object, radians=TAU) - Continuous rotation
+      - Rotate(object, angle=PI) - Rotate by angle (use this for simple rotations)
       - MoveAlongPath(object, path) - Follow a path
-      - Homotopy, PhaseFlow
+      - Shift(object, direction) - Move in a direction
+      - IMPORTANT: Do NOT use Rotating() animation - it has compatibility issues
+      - For continuous rotation, use: self.play(Rotate(obj, angle=TAU), run_time=2)
 
       INDICATION & EMPHASIS:
       - Indicate(object) - Briefly emphasize
@@ -149,7 +156,10 @@ export const MANIM_SYSTEM_PROMPT = `
 
       ANIMATION TIMING & GROUPING:
       - AnimationGroup(*animations) - Play animations together
-      - LaggedStart(*animatS:
+      - LaggedStart(*animations, lag_ratio=0.5) - Staggered animations
+      - Succession(*animations) - Play one after another
+      
+    SCENE TEMPLATES:
 
     BASIC 2D SCENE:
     from manim import *
@@ -169,6 +179,9 @@ export const MANIM_SYSTEM_PROMPT = `
             self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
             axes = ThreeDAxes()
             sphere = Sphere(radius=1, color=BLUE)
+            self.play(Create(axes), Create(sphere))
+            self.wait(2)
+
     ADVANCED TECHNIQUES:
 
     ANIMATION TIMING:
@@ -200,86 +213,8 @@ export const MANIM_SYSTEM_PROMPT = `
     - DO use vibrant colors (BLUE, RED, GREEN, YELLOW, PURPLE, ORANGE)
     - DO make animations smooth and educational
     - DO include descriptive class names related to the topic
-    - DO1 - Pythagorean Theorem (Basic):
-from manim import *
 
-class PythagoreanTheorem(Scene):
-    def construct(self):
-        title = Text("Pythagorean Theorem", font_size=48, color=BLUE)
-        title.to_edge(UP)
-        self.play(Write(title))
-        self.wait(0.5)
-        
-        formula = MathTex(r"a^2 + b^2 = c^2", font_size=60, color=YELLOW)
-        self.play(Write(formula))
-        self.wait(1)
-        
-        triangle = Polygon(
-            [-2, -1, 0], [2, -1, 0], [2, 2, 0],
-            color=WHITE, fill_opacity=0.3
-        )
-        formula.generate_target()
-        formula.target.scale(0.7).to_edge(UP, buff=1)
-        self.play(MoveToTarget(formula))
-        self.play(Create(triangle))
-        self.wait(2)
-
-EXAMPLE 2 - Function Graph (Advanced):
-from manim import *
-
-class SineWaveAnimation(Scene):
-    def construct(self):
-        axes = Axes(x_range=[-4, 4], y_range=[-2, 2], x_length=10, y_length=6)
-        labels = axes.get_axis_labels(x_label="x", y_label="f(x)")
-        
-        sine_graph = axes.plot(lambda x: np.sin(x), color=BLUE)
-        graph_label = axes.get_graph_label(sine_graph, label=MathTex(r"\\sin(x)"))
-        
-        self.play(Create(axes), Write(labels))
-        self.play(Create(sine_graph), run_time=2)
-        self.play(Write(graph_label))
-        self.wait(2)
-
-EXAMPLE 3 - 3D Visualization:
-from manim import *
-
-class RotatingSphere(ThreeDScene):
-    def construct(self):
-        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
-        
-        axes = ThreeDAxes()
-        sphere = Sphere(radius=1.5, resolution=(20, 20))
-        sphere.set_color(BLUE)
-        sphere.set_opacity(0.7)
-        
-        self.play(Create(axes))
-        self.play(Create(sphere))
-        self.begin_ambient_camera_rotation(rate=0.3)
-        self.wait(4)
-        self.stop_ambient_camera_rotation()
-        self.wait(1)
-
-EXAMPLE 4 - Dynamic Animation with ValueTracker:
-from manim import *
-
-class ExpandingCircle(Scene):
-    def construct(self):
-        radius_tracker = ValueTracker(0.5)
-        
-        circle = always_redraw(
-            lambda: Circle(radius=radius_tracker.get_value(), color=BLUE)
-        )
-        radius_text = always_redraw(
-            lambda: MathTex(f"r = {radius_tracker.get_value():.1f}")
-            .next_to(circle, DOWN)
-        )
-        
-        self.add(circle, radius_text)
-        self.play(radius_tracker.animate.set_value(3), run_time=3, rate_func=smooth)
-        self.wait(1TEMPLATE:
-    
-    from manim import *
-    class AnimationName(Scene):
+    CODE TEMPLATE:
         def construct(self):
             # Create objects
             title = Text("Title Here", font_size=48)
@@ -296,17 +231,7 @@ class ExpandingCircle(Scene):
 
             self.wait(2)
 
-    IMPORTANT RULES:
-    - DO NOT include any text before or after the code
-    - DO NOT wrap code in markdown code blocks
-    - DO NOT add explanatory text
-    - DO NOT use f-strings for MathTex content
-    - DO ensure all animations have proper wait() calls
-    - DO use vibrant colors (BLUE, RED, GREEN, YELLOW, PURPLE, ORANGE)
-    - DO make animations smooth and educational
-    - DO include descriptive class names related to the topic
-
-EXAMPLE - Pythagorean Theorem:
+    EXAMPLE - Simple Animation:
 from manim import *
 
 class PythagoreanTheorem(Scene):

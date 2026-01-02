@@ -5,9 +5,8 @@ import { auth } from "@/lib/auth";
 const PYTHON_SERVICE_URL =
   process.env.PYTHON_SERVICE_URL || "http://localhost:8000";
 
-// Configure route to allow longer execution time
-export const maxDuration = 600; // 10 minutes (requires Pro plan or higher on Vercel)
-export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 1 minute is enough since we return immediately
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +18,7 @@ export async function POST(req: NextRequest) {
           success: false,
           message: "Unauthorized",
         },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -33,10 +32,11 @@ export async function POST(req: NextRequest) {
         },
         {
           status: 400,
-        },
+        }
       );
     }
 
+    // Update status to RENDERING
     await prisma.animation.update({
       where: {
         id: animationId,
@@ -46,73 +46,54 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Use fetch with increased timeouts
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes
+    // Get the base URL for webhook callback
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      req.headers.get("origin") ||
+      "http://localhost:3000";
+    const webhookUrl = `${baseUrl}/api/ai/render-callback`;
 
-    try {
-      const response = await fetch(`${PYTHON_SERVICE_URL}/execute`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code, quality }),
-        signal: controller.signal,
-        // @ts-ignore - Next.js fetch extensions
-        keepalive: true,
-      });
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorMessage = await response.text();
-        throw new Error(errorMessage || "Failed to render video");
-      }
-
-      const result = await response.json();
-
-      await prisma.animation.update({
-        where: {
-          id: animationId,
-        },
-        data: {
-          status: "COMPLETED",
-          videoUrl: result.video_url,
-          thumbnailUrl: result.thumbnail_url,
-          duration: result.duration,
-        },
-      });
-
-      return NextResponse.json(
-        {
-          success: true,
-          message: "Video rendered successfully",
+    // Send request to Python service with webhook (fire and forget)
+    // Don't await - let it run in background
+    fetch(`${PYTHON_SERVICE_URL}/execute-async`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        code,
+        quality,
+        animation_id: animationId,
+        webhook_url: webhookUrl,
+      }),
+    }).catch((error) => {
+      console.error("Failed to start render job:", error);
+      // Update to failed status
+      prisma.animation
+        .update({
+          where: { id: animationId },
           data: {
-            animationId,
-            videoUrl: result.video_url,
-            thumbnailUrl: result.thumbnail_url,
-            duration: result.duration,
+            status: "FAILED",
+            errorMessage: "Failed to start rendering job",
           },
+        })
+        .catch(console.error);
+    });
+
+    // Return immediately - processing will continue in background
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Video rendering started. This may take several minutes.",
+        data: {
+          animationId,
+          status: "RENDERING",
         },
-        {
-          status: 200,
-        },
-      );
-    } catch (fetchError: any) {
-      clearTimeout(timeoutId);
-      
-      // Update animation status to failed
-      await prisma.animation.update({
-        where: { id: animationId },
-        data: { 
-          status: "FAILED",
-          errorMessage: fetchError.name === 'AbortError' 
-            ? "Video generation timed out. Please try with a simpler animation." 
-            : fetchError.message 
-        },
-      });
-      
-      throw fetchError;
-    }
+      },
+      {
+        status: 202, // 202 Accepted
+      }
+    );
   } catch (error: any) {
     console.error("Render Error: ", error);
     return NextResponse.json(
@@ -122,7 +103,7 @@ export async function POST(req: NextRequest) {
       },
       {
         status: 500,
-      },
+      }
     );
   }
 }

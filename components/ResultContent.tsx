@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Loader2, Share2 } from "lucide-react";
+import { ArrowLeft, Loader2, Share2, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DownloadButton from "@/components/ui/button-download";
 import {
@@ -15,72 +15,136 @@ import type { AnimationModel } from "@/app/generated/prisma/models/Animation";
 
 import confetti from "canvas-confetti";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
+import { TextShimmer } from "./ui/text-shimmer";
 
 interface ResultContentProps {
   animation: AnimationModel;
 }
 
+type AnimationStatus = "GENERATING" | "RENDERING" | "COMPLETED" | "FAILED";
+
+interface AnimationData {
+  id: string;
+  status: AnimationStatus;
+  videoUrl: string | null;
+  thumbnailUrl: string | null;
+  duration: number | null;
+  errorMessage: string | null;
+}
+
 export function ResultContent({ animation }: ResultContentProps) {
   const router = useRouter();
 
-  const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(true);
+  const [currentAnimation, setCurrentAnimation] = useState<AnimationData>({
+    id: animation.id,
+    status: animation.status as AnimationStatus,
+    videoUrl: animation.videoUrl,
+    thumbnailUrl: animation.thumbnailUrl,
+    duration: animation.duration,
+    errorMessage: animation.errorMessage,
+  });
+  
+  const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const [showContent, setShowContent] = useState<boolean>(false);
   const [downloadStatus, setDownloadStatus] = useState<
     "idle" | "downloading" | "downloaded" | "complete"
   >("idle");
   const [progress, setProgress] = useState(0);
+  const [pollingCount, setPollingCount] = useState(0);
+
+  const isRendering = currentAnimation.status === "RENDERING" || currentAnimation.status === "GENERATING";
+  const isCompleted = currentAnimation.status === "COMPLETED";
+  const isFailed = currentAnimation.status === "FAILED";
 
   const truncatePrompt = (text: string, maxLength: number = 50) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + ".....";
   };
 
-  useEffect(() => {
-    const duration = 500;
-    const end = Date.now() + duration;
-    const colors = ["#a855f7", "#3b82f6", "#22c55e", "#eab308", "#ec4899"];
-
-    const frame = () => {
-      confetti({
-        particleCount: 2,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0, y: 0.8 },
-        colors: colors,
-      });
-      confetti({
-        particleCount: 2,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1, y: 0.8 },
-        colors: colors,
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
+  // Polling for animation status
+  const pollStatus = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/ai/animation-status/${animation.id}`);
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        setCurrentAnimation(data.data);
+        return data.data.status;
       }
-    };
+    } catch (error) {
+      console.error("Error polling status:", error);
+    }
+    return null;
+  }, [animation.id]);
 
-    confetti({
-      particleCount: 40,
-      spread: 60,
-      origin: { y: 0.6 },
-      colors: colors,
-    });
+  // Start polling when rendering
+  useEffect(() => {
+    if (!isRendering) return;
 
-    frame();
+    const pollInterval = setInterval(async () => {
+      setPollingCount(prev => prev + 1);
+      const status = await pollStatus();
+      
+      if (status === "COMPLETED" || status === "FAILED") {
+        clearInterval(pollInterval);
+      }
+    }, 15000); // Poll every 15 seconds
 
-    // Hide success message after 1.8 seconds
-    setTimeout(() => setShowSuccessMessage(false), 1800);
+    return () => clearInterval(pollInterval);
+  }, [isRendering, pollStatus]);
 
-    // Show video content after success message starts fading
-    setTimeout(() => setShowContent(true), 1800);
-  }, []);
+  // Show success animation when completed
+  useEffect(() => {
+    if (isCompleted && currentAnimation.videoUrl) {
+      setShowSuccessMessage(true);
+      
+      // Confetti animation
+      const duration = 500;
+      const end = Date.now() + duration;
+      const colors = ["#a855f7", "#3b82f6", "#22c55e", "#eab308", "#ec4899"];
+
+      const frame = () => {
+        confetti({
+          particleCount: 2,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 0.8 },
+          colors: colors,
+        });
+        confetti({
+          particleCount: 2,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 0.8 },
+          colors: colors,
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      };
+
+      confetti({
+        particleCount: 40,
+        spread: 60,
+        origin: { y: 0.6 },
+        colors: colors,
+      });
+
+      frame();
+
+      // Hide success message after 1.8 seconds
+      setTimeout(() => setShowSuccessMessage(false), 1800);
+
+      // Show video content after success message starts fading
+      setTimeout(() => setShowContent(true), 1800);
+    }
+  }, [isCompleted, currentAnimation.videoUrl]);
 
   const handleDownload = async () => {
-    if (downloadStatus !== "idle" || !animation.videoUrl) return;
+    if (downloadStatus !== "idle" || !currentAnimation.videoUrl) return;
 
     setDownloadStatus("downloading");
     setProgress(0);
@@ -96,7 +160,7 @@ export function ResultContent({ animation }: ResultContentProps) {
         });
       }, 200);
 
-      const response = await fetch(animation.videoUrl);
+      const response = await fetch(currentAnimation.videoUrl);
       const blob = await response.blob();
 
       clearInterval(progressInterval);
@@ -140,6 +204,113 @@ export function ResultContent({ animation }: ResultContentProps) {
       router.replace(`/share/${animation.id}`);
     }, 2000);
   };
+
+  const handleRetry = () => {
+    router.push("/dashboard");
+  };
+
+  // Rendering state UI
+  if (isRendering) {
+    return (
+      <div className="min-h-screen bg-[#030303] text-foreground">
+        {/* Header */}
+        <header className="backdrop-blur-xl bg-[#030303] sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <Button
+              onClick={() => router.replace("/dashboard")}
+              className="flex text-black bg-white hover:bg-white/80 items-center gap-2 cursor-pointer transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm">Back to Dashboard</span>
+            </Button>
+          </div>
+        </header>
+
+        <main className="max-w-5xl mx-auto px-6 py-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center min-h-[60vh]"
+          >
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full border-4 border-neutral-800 border-t-white animate-spin " />
+            </div>    
+
+            <h2 className="text-2xl font-bold text-white mt-8 mb-2">
+              Rendering Your Animation
+            </h2>
+            <p className="text-neutral-400 text-center max-w-md mb-4">
+              This may take several minutes depending on the complexity of your animation.
+              Feel free to stay on this page - it will update automatically.
+            </p>
+            
+            <div className="flex items-center gap-2 text-sm text-neutral-500">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Checking status... ({pollingCount} checks)</span>
+            </div>
+            
+            <p className="text-xs text-neutral-600 mt-4">
+              Tip: You can leave this page and come back later. Your video will be ready when you return.
+            </p>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
+
+  // Failed state UI
+  if (isFailed) {
+    return (
+      <div className="min-h-screen bg-[#030303] text-foreground">
+        {/* Header */}
+        <header className="backdrop-blur-xl bg-[#030303] sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <Button
+              onClick={() => router.replace("/dashboard")}
+              className="flex text-black bg-white hover:bg-white/80 items-center gap-2 cursor-pointer transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm">Back to Dashboard</span>
+            </Button>
+          </div>
+        </header>
+
+        <main className="max-w-5xl mx-auto px-6 py-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center min-h-[60vh]"
+          >
+            <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mb-6">
+              <AlertCircle className="w-10 h-10 text-red-500" />
+            </div>
+            
+            <h2 className="text-2xl font-bold text-white mb-2">
+              Rendering Failed
+            </h2>
+            <p className="text-neutral-400 text-center max-w-md mb-2">
+              Unfortunately, we couldn&apos;t render your animation.
+            </p>
+            
+            {currentAnimation.errorMessage && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 max-w-md mt-4">
+                <p className="text-red-400 text-sm font-mono">
+                  {currentAnimation.errorMessage}
+                </p>
+              </div>
+            )}
+            
+            <Button
+              onClick={handleRetry}
+              className="mt-8 px-8 py-6 bg-white text-black font-semibold rounded-lg hover:bg-neutral-200 transition-all duration-300"
+            >
+              Try Again
+            </Button>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#030303] text-foreground">
@@ -215,7 +386,7 @@ export function ResultContent({ animation }: ResultContentProps) {
               <div className="aspect-video">
                 <VideoPlayer style={{ width: "100%", height: "100%" }}>
                   <VideoPlayerContent
-                    src={animation.videoUrl || ""}
+                    src={currentAnimation.videoUrl || ""}
                     autoPlay
                     loop
                     muted
@@ -253,7 +424,7 @@ export function ResultContent({ animation }: ResultContentProps) {
                 transition={{ delay: 0.4 }}
                 className="rounded-2xl py-4 px-30 flex items-center justify-center gap-4"
               >
-                {animation.videoUrl && (
+                {currentAnimation.videoUrl && (
                   <>
                     <DownloadButton
                       downloadStatus={downloadStatus}
