@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ code, quality }),
-      signal: AbortSignal.timeout(120000),
+      signal: AbortSignal.timeout(200000),
     });
 
     if (!response.ok) {

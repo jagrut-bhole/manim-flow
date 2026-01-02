@@ -30,6 +30,7 @@ export default function RootLayout({
       <AuthProvider>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          suppressHydrationWarning
         >
           {children}
           <Toaster position="top-center" />
