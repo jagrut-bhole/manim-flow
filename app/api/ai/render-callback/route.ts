@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       console.warn("Invalid webhook secret received");
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     if (!animation_id) {
       return NextResponse.json(
         { success: false, message: "Animation ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     console.error("Callback Error:", error);
     return NextResponse.json(
       { success: false, message: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

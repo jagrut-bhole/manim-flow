@@ -12,7 +12,7 @@ export async function POST(request: Request) {
           verified: false,
           message: "Email is required",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     // If user exists but is not verified, send a new verification code
     if (!user.emailVerified) {
       const verificationCode = Math.floor(
-        100000 + Math.random() * 900000
+        100000 + Math.random() * 900000,
       ).toString();
       const codeExpiry = new Date(Date.now() + 15 * 60 * 1000);
 
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         verified: false,
         message: "Internal server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,7 +1,13 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Loader2, Share2, AlertCircle, RefreshCw } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Share2,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DownloadButton from "@/components/ui/button-download";
 import {
@@ -45,7 +51,7 @@ export function ResultContent({ animation }: ResultContentProps) {
     duration: animation.duration,
     errorMessage: animation.errorMessage,
   });
-  
+
   const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const [showContent, setShowContent] = useState<boolean>(false);
   const [downloadStatus, setDownloadStatus] = useState<
@@ -54,7 +60,9 @@ export function ResultContent({ animation }: ResultContentProps) {
   const [progress, setProgress] = useState(0);
   const [pollingCount, setPollingCount] = useState(0);
 
-  const isRendering = currentAnimation.status === "RENDERING" || currentAnimation.status === "GENERATING";
+  const isRendering =
+    currentAnimation.status === "RENDERING" ||
+    currentAnimation.status === "GENERATING";
   const isCompleted = currentAnimation.status === "COMPLETED";
   const isFailed = currentAnimation.status === "FAILED";
 
@@ -68,7 +76,7 @@ export function ResultContent({ animation }: ResultContentProps) {
     try {
       const response = await fetch(`/api/ai/animation-status/${animation.id}`);
       const data = await response.json();
-      
+
       if (data.success && data.data) {
         setCurrentAnimation(data.data);
         return data.data.status;
@@ -84,9 +92,9 @@ export function ResultContent({ animation }: ResultContentProps) {
     if (!isRendering) return;
 
     const pollInterval = setInterval(async () => {
-      setPollingCount(prev => prev + 1);
+      setPollingCount((prev) => prev + 1);
       const status = await pollStatus();
-      
+
       if (status === "COMPLETED" || status === "FAILED") {
         clearInterval(pollInterval);
       }
@@ -99,7 +107,7 @@ export function ResultContent({ animation }: ResultContentProps) {
   useEffect(() => {
     if (isCompleted && currentAnimation.videoUrl) {
       setShowSuccessMessage(true);
-      
+
       // Confetti animation
       const duration = 500;
       const end = Date.now() + duration;
@@ -234,23 +242,25 @@ export function ResultContent({ animation }: ResultContentProps) {
           >
             <div className="relative">
               <div className="w-24 h-24 rounded-full border-4 border-neutral-800 border-t-white animate-spin " />
-            </div>    
+            </div>
 
             <h2 className="text-2xl font-bold text-white mt-8 mb-2">
               Rendering Your Animation
             </h2>
             <p className="text-neutral-400 text-center max-w-md mb-4">
-              This may take several minutes depending on the complexity of your animation.
-              Feel free to stay on this page - it will update automatically.
+              This may take several minutes depending on the complexity of your
+              animation. Feel free to stay on this page - it will update
+              automatically.
             </p>
-            
+
             <div className="flex items-center gap-2 text-sm text-neutral-500">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span>Checking status... ({pollingCount} checks)</span>
             </div>
-            
+
             <p className="text-xs text-neutral-600 mt-4">
-              Tip: You can leave this page and come back later. Your video will be ready when you return.
+              Tip: You can leave this page and come back later. Your video will
+              be ready when you return.
             </p>
           </motion.div>
         </main>
@@ -284,14 +294,14 @@ export function ResultContent({ animation }: ResultContentProps) {
             <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mb-6">
               <AlertCircle className="w-10 h-10 text-red-500" />
             </div>
-            
+
             <h2 className="text-2xl font-bold text-white mb-2">
               Rendering Failed
             </h2>
             <p className="text-neutral-400 text-center max-w-md mb-2">
               Unfortunately, we couldn&apos;t render your animation.
             </p>
-            
+
             {currentAnimation.errorMessage && (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 max-w-md mt-4">
                 <p className="text-red-400 text-sm font-mono">
@@ -299,7 +309,7 @@ export function ResultContent({ animation }: ResultContentProps) {
                 </p>
               </div>
             )}
-            
+
             <Button
               onClick={handleRetry}
               className="mt-8 px-8 py-6 bg-white text-black font-semibold rounded-lg hover:bg-neutral-200 transition-all duration-300"

@@ -43,7 +43,10 @@ export default function SignInPage() {
 
       if (signInResult?.error) {
         // Check if it's a CredentialsSignin or Configuration error (could be unverified or wrong password)
-        if (signInResult.error === "CredentialsSignin" || signInResult.error === "Configuration") {
+        if (
+          signInResult.error === "CredentialsSignin" ||
+          signInResult.error === "Configuration"
+        ) {
           // Try to check if user exists and is unverified by making an API call
           try {
             const checkResponse = await fetch("/api/auth/check-user", {
@@ -51,13 +54,13 @@ export default function SignInPage() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email }),
             });
-                        
+
             if (!checkResponse.ok) {
               throw new Error("Failed to check user status");
             }
-            
+
             const checkData = await checkResponse.json();
-            
+
             if (checkData.exists && !checkData.verified) {
               toast.error("Email not verified. We've sent you a new code.");
               // Store password temporarily for auto-login after verification

@@ -120,7 +120,9 @@ export default function DashboardPage() {
         // Navigate to result page which will handle polling
         router.push(`/result/${animationId}`);
       } else {
-        throw new Error(response.data.message || "Failed to start video rendering");
+        throw new Error(
+          response.data.message || "Failed to start video rendering",
+        );
       }
     } catch (error: any) {
       console.error("Render Video Error: ", error);

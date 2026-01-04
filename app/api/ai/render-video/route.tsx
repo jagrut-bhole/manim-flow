@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
           success: false,
           message: "Unauthorized",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         },
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -46,14 +46,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Get the base URL for webhook callback
     const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      req.headers.get("origin") ||
-      "http://localhost:3000";
+      process.env.NEXT_PUBLIC_APP_URL || 
+          (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+          req.headers.get("origin") ||
+          "http://localhost:3000";
+          
     const webhookUrl = `${baseUrl}/api/ai/render-callback`;
 
-    // Send request to Python service with webhook (fire and forget)
+    console.log("Webhook URL for animation:", animationId, "->", webhookUrl);
+
     // Don't await - let it run in background
     fetch(`${PYTHON_SERVICE_URL}/execute-async`, {
       method: "POST",
@@ -68,7 +70,7 @@ export async function POST(req: NextRequest) {
       }),
     }).catch((error) => {
       console.error("Failed to start render job:", error);
-      // Update to failed status
+
       prisma.animation
         .update({
           where: { id: animationId },
@@ -80,7 +82,6 @@ export async function POST(req: NextRequest) {
         .catch(console.error);
     });
 
-    // Return immediately - processing will continue in background
     return NextResponse.json(
       {
         success: true,
@@ -91,8 +92,8 @@ export async function POST(req: NextRequest) {
         },
       },
       {
-        status: 202, // 202 Accepted
-      }
+        status: 202,
+      },
     );
   } catch (error: any) {
     console.error("Render Error: ", error);
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }
