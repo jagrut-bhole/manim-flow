@@ -46,15 +46,18 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Construct webhook URL - prioritize NEXT_PUBLIC_APP_URL for production
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL || 
-          (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-          req.headers.get("origin") ||
-          "http://localhost:3000";
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+      req.headers.get("origin") ||
+      "http://localhost:3000";
           
     const webhookUrl = `${baseUrl}/api/ai/render-callback`;
 
-    console.log("Webhook URL for animation:", animationId, "->", webhookUrl);
+    console.log("[Render] Webhook URL for animation:", animationId, "->", webhookUrl);
+    console.log("[Render] Environment check - NEXT_PUBLIC_APP_URL:", process.env.NEXT_PUBLIC_APP_URL || "not set");
+    console.log("[Render] Environment check - VERCEL_URL:", process.env.VERCEL_URL || "not set");
 
     // Don't await - let it run in background
     fetch(`${PYTHON_SERVICE_URL}/execute-async`, {

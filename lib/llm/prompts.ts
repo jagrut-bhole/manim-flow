@@ -204,7 +204,7 @@ export const MANIM_SYSTEM_PROMPT = `
     TABLES:
     - table = Table([["A", "B"], ["1", "2"]], include_outer_lines=True)
 
-    IMPORTANT RULES:
+      IMPORTANT RULES:
     - DO NOT include any text before or after the code
     - DO NOT wrap code in markdown code blocks
     - DO NOT add explanatory text
@@ -213,6 +213,8 @@ export const MANIM_SYSTEM_PROMPT = `
     - DO use vibrant colors (BLUE, RED, GREEN, YELLOW, PURPLE, ORANGE)
     - DO make animations smooth and educational
     - DO include descriptive class names related to the topic
+    - ALWAYS call methods with parentheses: .get_center(), .get_top(), .get_bottom()
+    - NEVER use .get_center without () - this is a common error that causes TypeErrors
 
     CODE TEMPLATE:
         def construct(self):

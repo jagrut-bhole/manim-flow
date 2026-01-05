@@ -23,7 +23,6 @@ import confetti from "canvas-confetti";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { TextShimmer } from "./ui/text-shimmer";
 
 interface ResultContentProps {
   animation: AnimationModel;
@@ -54,11 +53,11 @@ export function ResultContent({ animation }: ResultContentProps) {
 
   const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const [showContent, setShowContent] = useState<boolean>(false);
-  const [downloadStatus, setDownloadStatus] = useState<
-    "idle" | "downloading" | "downloaded" | "complete"
-  >("idle");
+  const [downloadStatus, setDownloadStatus] = useState<"idle" | "downloading" | "downloaded" | "complete">("idle");
   const [progress, setProgress] = useState(0);
   const [pollingCount, setPollingCount] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [estimatedRemaining, setEstimatedRemaining] = useState(60);
 
   const isRendering =
     currentAnimation.status === "RENDERING" ||
@@ -79,6 +78,15 @@ export function ResultContent({ animation }: ResultContentProps) {
 
       if (data.success && data.data) {
         setCurrentAnimation(data.data);
+        
+        // Update time estimates
+        if (data.data.elapsedSeconds) {
+          setElapsedTime(data.data.elapsedSeconds);
+        }
+        if (data.data.estimatedRemainingSeconds !== undefined) {
+          setEstimatedRemaining(data.data.estimatedRemainingSeconds);
+        }
+        
         return data.data.status;
       }
     } catch (error) {
@@ -91,6 +99,9 @@ export function ResultContent({ animation }: ResultContentProps) {
   useEffect(() => {
     if (!isRendering) return;
 
+    // Poll immediately on mount
+    pollStatus();
+
     const pollInterval = setInterval(async () => {
       setPollingCount((prev) => prev + 1);
       const status = await pollStatus();
@@ -98,7 +109,7 @@ export function ResultContent({ animation }: ResultContentProps) {
       if (status === "COMPLETED" || status === "FAILED") {
         clearInterval(pollInterval);
       }
-    }, 15000); // Poll every 15 seconds
+    }, 5000); // Poll every 10 seconds for more responsive updates
 
     return () => clearInterval(pollInterval);
   }, [isRendering, pollStatus]);
@@ -217,8 +228,75 @@ export function ResultContent({ animation }: ResultContentProps) {
     router.push("/dashboard");
   };
 
+  // Parse and simplify error messages
+  const getSimplifiedError = (error: string | null): { title: string; message: string; technical: string } => {
+    if (!error) return { title: "Unknown Error", message: "An unexpected error occurred.", technical: "" };
+
+    // Check for common error patterns
+    if (error.includes("unsupported operand type(s) for -: 'method' and 'float'") || 
+        error.includes(".get_center") || error.includes(".get_top") || 
+        error.includes(".get_bottom") || error.includes(".get_left") || error.includes(".get_right")) {
+      return {
+        title: "Missing Parentheses Error",
+        message: "The code is missing parentheses () after a method call like .get_center(). This is a common syntax error.",
+        technical: error
+      };
+    }
+
+    if (error.includes("FileNotFoundError") && (error.includes("latex") || error.includes("MathTex") || error.includes("Tex"))) {
+      return {
+        title: "LaTeX Not Installed",
+        message: "MathTex requires LaTeX to be installed. Try using Text() for simple labels instead, or install MiKTeX on Windows.",
+        technical: error
+      };
+    }
+
+    if (error.includes("ModuleNotFoundError") || error.includes("ImportError")) {
+      return {
+        title: "Missing Dependency",
+        message: "A required module is not installed. The code may be trying to import something that's not available.",
+        technical: error
+      };
+    }
+
+    if (error.includes("SyntaxError")) {
+      return {
+        title: "Python Syntax Error",
+        message: "The generated code has a syntax error. Try regenerating the animation with a clearer prompt.",
+        technical: error
+      };
+    }
+
+    if (error.includes("TypeError")) {
+      return {
+        title: "Type Error",
+        message: "The code is trying to use incompatible data types. This often happens with incorrect method calls.",
+        technical: error
+      };
+    }
+
+    // Default fallback
+    return {
+      title: "Rendering Error",
+      message: "The animation failed to render. Try regenerating with a simpler or clearer prompt.",
+      technical: error
+    };
+  };
+
   // Rendering state UI
   if (isRendering) {
+    const formatTime = (seconds: number) => {
+      if (seconds < 60) return `${seconds}s`;
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}m ${secs}s`;
+    };
+
+    const progressPercentage = Math.min(
+      95,
+      (elapsedTime / (elapsedTime + estimatedRemaining)) * 100
+    );
+
     return (
       <div className="min-h-screen bg-[#030303] text-foreground">
         {/* Header */}
@@ -240,27 +318,73 @@ export function ResultContent({ animation }: ResultContentProps) {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center justify-center min-h-[60vh]"
           >
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full border-4 border-neutral-800 border-t-white animate-spin " />
+            {/* Animated spinner */}
+            <div className="relative mb-8">
+              <div className="w-24 h-24 rounded-full border-4 border-neutral-800 border-t-white animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-sm font-mono text-neutral-400">
+                  {Math.floor(progressPercentage)}%
+                </span>
+              </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mt-8 mb-2">
+            <h2 className="text-2xl font-bold text-white mt-4 mb-2">
               Rendering Your Animation
             </h2>
-            <p className="text-neutral-400 text-center max-w-md mb-4">
+            <p className="text-neutral-400 text-center max-w-md mb-6">
               This may take several minutes depending on the complexity of your
               animation. Feel free to stay on this page - it will update
               automatically.
             </p>
 
-            <div className="flex items-center gap-2 text-sm text-neutral-500">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Checking status... ({pollingCount} checks)</span>
+            {/* Progress bar */}
+            <div className="w-full max-w-md mb-6">
+              <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-white"
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${progressPercentage}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
             </div>
 
-            <p className="text-xs text-neutral-600 mt-4">
-              Tip: You can leave this page and come back later. Your video will
-              be ready when you return.
+            {/* Time estimates */}
+            <div className="grid grid-cols-2 gap-6 mb-6">
+              <div className="text-center">
+                <p className="text-xs text-neutral-500 mb-1">Elapsed Time</p>
+                <p className="text-lg font-mono text-white">
+                  {formatTime(elapsedTime)}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-neutral-500 mb-1">
+                  Est. Remaining
+                </p>
+                <p className="text-lg font-mono text-white">
+                  {estimatedRemaining > 0 ? formatTime(estimatedRemaining) : "Almost done..."}
+                </p>
+              </div>
+            </div>
+
+            {/* Status indicator */}
+            <div className="flex items-center gap-2 text-sm text-neutral-500 mb-4">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>
+                {currentAnimation.status === "GENERATING"
+                  ? "Generating code..."
+                  : "Rendering video..."}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs text-neutral-600">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span>Auto-checking status ({pollingCount} updates)</span>
+            </div>
+
+            <p className="text-xs text-neutral-600 mt-6 text-center max-w-sm">
+              💡 Tip: You can leave this page and come back later. Your video
+              will be ready when you return.
             </p>
           </motion.div>
         </main>
@@ -270,6 +394,8 @@ export function ResultContent({ animation }: ResultContentProps) {
 
   // Failed state UI
   if (isFailed) {
+    const errorInfo = getSimplifiedError(currentAnimation.errorMessage);
+    
     return (
       <div className="min-h-screen bg-[#030303] text-foreground">
         {/* Header */}
@@ -296,26 +422,36 @@ export function ResultContent({ animation }: ResultContentProps) {
             </div>
 
             <h2 className="text-2xl font-bold text-white mb-2">
-              Rendering Failed
+              {errorInfo.title}
             </h2>
-            <p className="text-neutral-400 text-center max-w-md mb-2">
-              Unfortunately, we couldn&apos;t render your animation.
+            <p className="text-neutral-400 text-center max-w-md mb-4">
+              {errorInfo.message}
             </p>
 
-            {currentAnimation.errorMessage && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 max-w-md mt-4">
-                <p className="text-red-400 text-sm font-mono">
-                  {currentAnimation.errorMessage}
-                </p>
-              </div>
+            {errorInfo.technical && (
+              <details className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 max-w-2xl mt-4 w-full">
+                <summary className="text-red-400 text-sm font-semibold cursor-pointer mb-2">
+                  Show Technical Details
+                </summary>
+                <pre className="text-red-400 text-xs font-mono overflow-x-auto whitespace-pre-wrap mt-2">
+                  {errorInfo.technical}
+                </pre>
+              </details>
             )}
 
-            <Button
-              onClick={handleRetry}
-              className="mt-8 px-8 py-6 bg-white text-black font-semibold rounded-lg hover:bg-neutral-200 transition-all duration-300"
-            >
-              Try Again
-            </Button>
+            <div className="flex gap-4 mt-8">
+              <Button
+                onClick={handleRetry}
+                className="px-8 py-6 bg-white text-black font-semibold rounded-lg hover:bg-neutral-200 transition-all duration-300"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+            </div>
+
+            <p className="text-xs text-neutral-600 mt-6 text-center max-w-md">
+              💡 Tip: Try simplifying your prompt or being more specific about what you want to see
+            </p>
           </motion.div>
         </main>
       </div>
