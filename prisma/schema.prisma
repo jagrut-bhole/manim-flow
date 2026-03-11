@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
@@ -14,21 +8,75 @@ datasource db {
 }
 
 model User {
-  id            String  @id @default(cuid())
-  email         String  @unique
-  name          String
-  password      String
-  emailVerified Boolean @default(false)
+  id       String @id @default(cuid())
+  email    String @unique
+  name     String
+  password String
 
-  verificationCode       String?
-  verificationCodeExpiry DateTime?
+  //Subscription & credits
+  plan            Plan      @default(FREE)
+  credits         Int       @default(10)
+  creditsResultAt DateTime?
+
+  // RazorPay
+  razorpayCustomerId String? @unique // razorpay customer id
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  animations Animation[]
+  animations       Animation[]
+  subscriptions    Subscription[]
+  apiKeys          ApiKey[]
+  jobs             Job[]
 
   @@index([email])
+}
+
+model Subscription {
+  id     String @id @default(uuid())
+  userId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  plan   Plan               @default(FREE)
+  status SubscriptionStatus @default(ACTIVE)
+
+  // Razorpay identifiers
+  razorpaySubscriptionId String? @unique
+  razorpayPaymentId      String?
+
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+
+  cancelledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([razorpaySubscriptionId])
+}
+
+model Job {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status     JobStatus @default(QUEUED)
+  attempts   Int       @default(0)
+  maxRetries Int       @default(3)
+
+  queuedAt    DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  errorMessage String? @db.Text
+  workerLog    String? @db.Text
+
+  animation        Animation?
+
+  @@index([userId])
+  @@index([status])
 }
 
 model Animation {
@@ -37,14 +85,19 @@ model Animation {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  //Link to the job that created this
+  JobId String? @unique
+  job   Job?    @relation(fields: [JobId], references: [id])
+
   prompt String @db.Text
   code   String @db.Text
-  model  String @default("llama-3.3-70b-versatile")
+  model  String? @default("llama-3.3-70b-versatile")
+
+  source AnimationSource @default(WEBSITE) // website, api, playground
 
   videoUrl     String?
   thumbnailUrl String?
-
-  duration Float?
+  duration     Float?
 
   forGallery Boolean @default(false)
 
@@ -54,18 +107,69 @@ model Animation {
   status       Status  @default(GENERATING)
   errorMessage String? @db.Text
 
+  // Rendering time
+  renderStartedAt   DateTime?
+  renderCompletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([status])
+  @@index([source])
   @@index([createdAt])
   @@index([userId, createdAt])
 }
+
+model ApiKey {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name     String // user labels it
+  key      String  @unique // "mf_live_abc123..."
+  credits  Int     @default(0) // separate credits for API usage
+  isActive Boolean @default(true)
+
+  lastUsedAt    DateTime?
+  totalRequests Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+  @@index([userId])
+}
+
 
 enum Status {
   GENERATING
   RENDERING
   COMPLETED
   FAILED
+}
+
+enum JobStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  PAST_DUE
+}
+
+enum AnimationSource {
+  WEBSITE
+  API
+  PLAYGROUND
 }

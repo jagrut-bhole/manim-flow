@@ -8,22 +8,22 @@ export interface PromptSet {
 export const MODELS = [
   {
     id: AIModel.GROQ_OLLAMA,
-    name: "Groq (Ollama)",
+    name: "Base Model",
     locked: false,
     icon: <Box size={16} className="text-orange-400" />,
   },
   {
     id: AIModel.GOOGLE_GEMINI,
-    name: "Google Gemini",
+    name: "Thinking Model",
     locked: false,
     icon: <Sparkles size={16} className="text-blue-400" />,
   },
-  {
-    id: AIModel.OPENAI_GPT3,
-    name: "OpenAI GPT 3.5",
-    locked: true,
-    icon: <Lock size={16} className="text-neutral-500" />,
-  },
+  // {
+  //   id: AIModel.OPENAI_GPT3,
+  //   name: "Intelligent Model",
+  //   locked: true,
+  //   icon: <Lock size={16} className="text-neutral-500" />,
+  // },
 ];
 
 export const TYPEWRITER_PHRASES = [

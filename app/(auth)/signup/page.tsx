@@ -10,6 +10,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import axios, { AxiosError } from "axios";
 import { ApiResponse } from "@/types/ApiResponse";
+import { signIn } from "next-auth/react";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -33,18 +34,22 @@ export default function SignUpPage() {
         password,
       });
 
-      const userEmail = email;
-
       if (result.data.success) {
-        toast.success(
-          result.data.message ||
-            "Registration successful! Please verify your email.",
-        );
+        toast.success(result.data.message);
 
-        // Store password temporarily for auto-login after verification
-        sessionStorage.setItem("temp_signup_password", password);
+        const signInResult = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
 
-        router.replace(`/verify-code/${userEmail}`);
+        if (signInResult?.ok) {
+          router.replace("/dashboard");
+        } else {
+          toast.error("Something went wrong. Please try again");
+        }
+
+        router.replace(`/dashboard`);
       }
     } catch (error) {
       console.log("Signup error: ", error);
@@ -103,28 +108,33 @@ export default function SignUpPage() {
                 <Label className="text-white mb-1.5" htmlFor="password">
                   Password
                 </Label>
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  minLength={8}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Your Password"
-                  required
-                  className="text-white"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
+                <div className="relative mt-1">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    minLength={8}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Your Password"
+                    required
+                    className="text-white"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-200 hover:text-gray-400 transition-colors"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
               <p className="mt-1 text-xs text-gray-300">
                 Must be at least 8 characters

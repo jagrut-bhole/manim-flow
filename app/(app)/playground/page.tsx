@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Editor } from "@monaco-editor/react";
-import { Play } from "lucide-react";
+import { Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 
@@ -26,17 +28,40 @@ class MyAnimation(Scene):
 
 export default function PlaygroundPage() {
   const [code, setCode] = useState(DEFAULT_CODE);
+  const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
 
-  const handleRender = () => {
-    toast.info("Coming soon! 🚀", {
-      description: "The playground render feature is under development.",
-      classNames: {
-        description: "text-black",
-      },
-    });
-    setTimeout(() => {
-      toast.dismiss();
-    }, 2500);
+  const handleRender = async () => {
+    if (!code.trim()) {
+      toast.error("Please write some Manim code first.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await axios.post("/api/ai/playground-render", {
+        code: code,
+        quality: "l",
+      });
+
+      if (response.data.success) {
+        const animationId = response.data.data.animationId;
+        toast.success("Rendering started! Redirecting...");
+        router.push(`/result/${animationId}`);
+      } else {
+        throw new Error(
+          response.data.message || "Failed to start rendering",
+        );
+      }
+    } catch (error: any) {
+      console.error("Playground render error:", error);
+      const errorMsg =
+        error.response?.data?.message || "Failed to start rendering.";
+      toast.error(errorMsg);
+      setLoading(false);
+    }
+    // Don't reset loading on success — we're navigating away
   };
 
   return (
@@ -101,6 +126,7 @@ export default function PlaygroundPage() {
                   folding: true,
                   lineDecorationsWidth: 10,
                   lineNumbersMinChars: 3,
+                  readOnly: loading,
                 }}
               />
             </div>
@@ -110,10 +136,20 @@ export default function PlaygroundPage() {
           <div className="mt-6 flex justify-end">
             <Button
               onClick={handleRender}
-              className="px-8 py-6 bg-white text-black font-semibold rounded-lg hover:bg-neutral-200 transition-all duration-300 flex items-center gap-2"
+              disabled={loading}
+              className="px-8 py-6 bg-white text-black font-semibold rounded-lg hover:bg-neutral-200 transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Play className="w-5 h-5 fill-black" />
-              Render Animation
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Rendering...
+                </>
+              ) : (
+                <>
+                  <Play className="w-5 h-5 fill-black" />
+                  Render Animation
+                </>
+              )}
             </Button>
           </div>
         </div>

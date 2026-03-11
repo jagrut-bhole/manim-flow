@@ -45,14 +45,14 @@ export async function GET(
 
     // Calculate elapsed time for estimated completion
     const elapsedSeconds = Math.floor(
-      (Date.now() - new Date(animation.createdAt).getTime()) / 1000
+      (Date.now() - new Date(animation.createdAt).getTime()) / 1000,
     );
 
     // Estimated render time (30-90 seconds on average)
     const estimatedTotalSeconds = 60; // Base estimate
     const estimatedRemainingSeconds = Math.max(
       0,
-      estimatedTotalSeconds - elapsedSeconds
+      estimatedTotalSeconds - elapsedSeconds,
     );
 
     return NextResponse.json({
