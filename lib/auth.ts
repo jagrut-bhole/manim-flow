@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import prisma from "./prisma";
 import bcrypt from "bcryptjs";
-import { EmailServices } from "@/services/emailServices";
+import { Plan } from "@/app/generated/prisma/enums";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -34,41 +34,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             name: true,
             email: true,
             password: true,
-            emailVerified: true,
+            plan: true,
+            credits: true,
+            creditsResultAt: true
           },
         });
 
         if (!user) {
           throw new Error("No user found with the provided email");
-        }
-
-        if (!user.emailVerified) {
-          const verificationCode = Math.floor(
-            100000 + Math.random() * 900000,
-          ).toString();
-          const codeExpiry = new Date(Date.now() + 15 * 60 * 1000);
-
-          await prisma.user.update({
-            where: {
-              email: credentials.email,
-            },
-            data: {
-              verificationCode,
-              verificationCodeExpiry: codeExpiry,
-            },
-          });
-
-          try {
-            const emailService = new EmailServices();
-            emailService.sendVerificationCode(
-              credentials.email,
-              verificationCode,
-            );
-          } catch (error) {
-            console.error("Error sending verification email: ", error);
-          }
-
-          throw new Error(`UNVERIFIED:${credentials.email}`);
         }
 
         const isPasswordValid = await bcrypt.compare(
@@ -84,7 +57,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           name: user.name,
           email: user.email,
-          emailVerified: user.emailVerified,
+          plan: user.plan,
+          credit: user.credits,
+          creditsResultAt: user.creditsResultAt,
         };
       },
     }),
@@ -95,7 +70,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.emailVerified = !!(user as any).emailVerified;
+        token.credits = user.credits;
+        token.creditsResultAt = user.creditsResultAt;
+        token.plan = user.plan;
       }
       return token;
     },
@@ -104,7 +81,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
-        (session.user as any).emailVerified = token.emailVerified as boolean;
+        session.user.credits = token.credits as number;
+        session.user.creditsResultAt = token.creditsResultAt as Date;
+        session.user.plan = token.plan as Plan;
       }
       return session;
     },

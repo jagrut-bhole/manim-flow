@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { EmailServices } from "@/services/emailServices";
 
 export async function POST(request: Request) {
   try {
@@ -36,11 +35,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const verificationCode = Math.floor(
-      100000 + Math.random() * 900000,
-    ).toString();
-    const codeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 MIN EXPIRY
-
     const hashedPasword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
@@ -48,24 +42,15 @@ export async function POST(request: Request) {
         name,
         email,
         password: hashedPasword,
-        emailVerified: false,
-        verificationCode,
-        verificationCodeExpiry: codeExpiry,
+        credits: 10,
+        plan: "FREE",
       },
     });
-
-    try {
-      const emailService = new EmailServices();
-      await emailService.sendVerificationCode(email, verificationCode);
-    } catch (error) {
-      console.log("Email sending error: ", error);
-    }
 
     return Response.json(
       {
         success: true,
-        message:
-          "Registration successful! Check your email for verification code.",
+        message: "Registration successful!",
         data: {
           email: user.email,
           name: user.name,

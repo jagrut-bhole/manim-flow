@@ -1,26 +1,9 @@
-import prisma from "@/lib/prisma";
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { getGalleryAnimations } from "@/helpers/galleryHelper";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    const galleryItems = await prisma.animation.findMany({
-      where: {
-        forGallery: true,
-      },
-      select: {
-        id: true,
-        model: true,
-        prompt: true,
-        code: true,
-        user: true,
-        videoUrl: true,
-        thumbnailUrl: true,
-      },
-      orderBy: {
-        updatedAt: "desc",
-      },
-    });
-
+    const galleryItems = await getGalleryAnimations();
     if (!galleryItems) {
       return NextResponse.json(
         {

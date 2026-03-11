@@ -1,77 +1,35 @@
-import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/helpers/authHelpers";
+import { getUserAnimations } from "@/helpers/animationHelpers";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getAuthenticatedUser();
 
-    if (!session?.user?.id) {
+    if (!session) {
       return NextResponse.json(
         {
           success: false,
-          message: "Unauthorized",
+          message: "Unauthorized Request"
         },
         {
-          status: 401,
-        },
-      );
+          status: 402
+        }
+      )
     }
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: session.user.id,
-      },
-      select: {
-        animations: {
-          where: {
-            AND: [
-              {
-                videoUrl: {
-                  not: null,
-                },
-              },
-              {
-                status: "COMPLETED",
-              },
-            ],
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-          select: {
-            id: true,
-            prompt: true,
-            code: true,
-            videoUrl: true,
-            thumbnailUrl: true,
-            duration: true,
-            createdAt: true,
-            model: true,
-            like: true,
-            download: true,
-          },
-        },
-      },
-    });
+    const userId = session.id;
 
-    if (!user) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "User not found",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
+    const animations = await getUserAnimations(userId);
 
     return NextResponse.json(
       {
         success: true,
         message: "Profile fetched successfully",
-        data: user,
+        data: {
+          animations: animations ?? []
+        },
       },
       {
         status: 200,

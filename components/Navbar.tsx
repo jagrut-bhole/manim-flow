@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { ChevronDown, User2, LogOut } from "lucide-react";
 import {
@@ -14,6 +14,14 @@ export default function Navbar() {
   const { data: session, status } = useSession();
 
   const user: User = session?.user;
+
+  const credits = user?.credits;
+  const plan = user?.plan;
+  const creditsDate = user?.creditsResultAt;
+
+  useEffect(() => {
+    console.log(user);
+  }, []);
 
   const isLoading = status === "loading";
 
@@ -79,11 +87,18 @@ export default function Navbar() {
 
           {/* Right - Auth Section */}
           <div className="flex items-center gap-4">
+            {session && (
+              <div className="border-yellow-500 border bg-yellow-500/20 text-yellow-500 p-2 rounded-full font-medium transition-colors">
+                <span>
+                  Credits: {credits}
+                </span>
+              </div>
+            )}
             {isLoading ? (
               <div className="w-8 h-8 rounded-full hover:bg-[hsl(240_10%_14%)] animate-pulse" />
             ) : session ? (
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center space-x-2 p-2 rounded-lg hover:bg-[hsl(240_10%_14%)] transition-colors focus:outline-none cursor-pointer">
+                <DropdownMenuTrigger className="flex items-center space-x-2 p-2 rounded-lg  transition-colors focus:outline-none cursor-pointer">
                   <div className="w-8 h-8 rounded-full bg-[hsl(263_70%_58%/0.2)] flex items-center justify-center">
                     <User2 className="w-4 h-4 text-[hsl(263_70%_58%)]" />
                   </div>
@@ -128,6 +143,7 @@ export default function Navbar() {
               </>
             )}
           </div>
+
         </div>
       </div>
     </nav>

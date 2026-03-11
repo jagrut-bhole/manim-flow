@@ -33,7 +33,7 @@ export default function RootLayout({
           suppressHydrationWarning
         >
           {children}
-          <Toaster position="top-center" />
+          <Toaster position="top-right" duration={1500} />
         </body>
       </AuthProvider>
     </html>

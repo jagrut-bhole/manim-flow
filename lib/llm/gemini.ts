@@ -34,7 +34,7 @@ export async function generateWithGemini(userPrompt: string) {
     return {
       success: true,
       code: cleanedCode,
-      model: "gemini-1.5-pro",
+      model: "gemini-2.5-flash",
       provider: "gemini",
       tokensUsed: response.usage?.totalTokens || 0,
     };

@@ -39,53 +39,11 @@ export default function SignInPage() {
         redirect: false,
       });
 
-      console.log("Sign in result:", signInResult);
-
       if (signInResult?.error) {
-        // Check if it's a CredentialsSignin or Configuration error (could be unverified or wrong password)
-        if (
-          signInResult.error === "CredentialsSignin" ||
-          signInResult.error === "Configuration"
-        ) {
-          // Try to check if user exists and is unverified by making an API call
-          try {
-            const checkResponse = await fetch("/api/auth/check-user", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email }),
-            });
-
-            if (!checkResponse.ok) {
-              throw new Error("Failed to check user status");
-            }
-
-            const checkData = await checkResponse.json();
-
-            if (checkData.exists && !checkData.verified) {
-              toast.error("Email not verified. We've sent you a new code.");
-              // Store password temporarily for auto-login after verification
-              sessionStorage.setItem("temp_signup_password", password);
-              router.replace(`/verify-code/${encodeURIComponent(email)}`);
-              return;
-            } else if (!checkData.exists) {
-              toast.error("No account found with this email.");
-              return;
-            } else {
-              // User exists and is verified, so password must be wrong
-              toast.error("Invalid password. Please try again.");
-              return;
-            }
-          } catch (checkError) {
-            console.error("Error checking user status:", checkError);
-            toast.error("Unable to verify account status. Please try again.");
-            return;
-          }
-        } else {
-          toast.error("Something went wrong. Please try again.");
-        }
-      } else {
+        toast.error("Invalid email or password.");
+      } else if (signInResult?.ok) {
         toast.success("Signed in successfully!");
-        router.push("/dashboard");
+        router.replace("/dashboard");
       }
     } catch (error) {
       console.error("Sign In Error: ", error);

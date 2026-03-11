@@ -1,30 +1,37 @@
 import { NextResponse, NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
 
-export async function proxy(request: NextRequest) {
-  const session = await auth();
-  const url = new URL(request.url);
+import { getToken } from "next-auth/jwt";
 
-  if (
-    session &&
-    (url.pathname === "/" ||
-      url.pathname.startsWith("/signin") ||
-      url.pathname.startsWith("/signup") ||
-      url.pathname.startsWith("/verify-code"))
-  ) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+export async function proxy(req: NextRequest) {
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+  const { pathname } = req.nextUrl;
+
+  const authRoutes = ["/", "siginin", "/signup"];
+
+  const isAuthRoute =
+    authRoutes.includes(pathname) ||
+    pathname.startsWith("/signin") ||
+    pathname.startsWith("/sognup");
+
+  const protectedRoutes = ["/dashboard", "/result", "/playground", "/profile"];
+
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
+
+  if (token && isAuthRoute) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  if (
-    !session &&
-    (url.pathname.startsWith("/dashboard") ||
-      url.pathname.startsWith("/result") ||
-      url.pathname.startsWith("/playground") ||
-      url.pathname.startsWith("/profile"))
-  ) {
-    return NextResponse.redirect(new URL("/signin", request.url));
-  }
+  if (!token && isProtectedRoute) {
+    const loginUrl = new URL("/signin", req.url);
+    loginUrl.searchParams.set("callbackUrl", req.url);
 
+    return NextResponse.redirect(new URL("/signin", req.url));
+  }
   return NextResponse.next();
 }
 
