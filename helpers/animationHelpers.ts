@@ -13,7 +13,7 @@ export type CacheAnimations = {
     videoUrl: string | null;
     thumbnailUrl: string | null;
     duration: number | null;
-    model: string;
+    model: string | null;
     userId: string;
     createdAt: Date;
 }
