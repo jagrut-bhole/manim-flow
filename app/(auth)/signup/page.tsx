@@ -48,8 +48,6 @@ export default function SignUpPage() {
         } else {
           toast.error("Something went wrong. Please try again");
         }
-
-        router.replace(`/dashboard`);
       }
     } catch (error) {
       console.log("Signup error: ", error);

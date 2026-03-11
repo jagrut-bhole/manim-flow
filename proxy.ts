@@ -9,14 +9,12 @@ export async function proxy(req: NextRequest) {
   });
   const { pathname } = req.nextUrl;
 
-  const authRoutes = ["/", "siginin", "/signup"];
-
   const isAuthRoute =
-    authRoutes.includes(pathname) ||
+    pathname === "/" ||
     pathname.startsWith("/signin") ||
-    pathname.startsWith("/sognup");
+    pathname.startsWith("/signup");
 
-  const protectedRoutes = ["/dashboard", "/result", "/playground", "/profile"];
+  const protectedRoutes = ["/dashboard", "/result", "/playground", "/profile", "/gallery"];
 
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route),
@@ -28,10 +26,10 @@ export async function proxy(req: NextRequest) {
 
   if (!token && isProtectedRoute) {
     const loginUrl = new URL("/signin", req.url);
-    loginUrl.searchParams.set("callbackUrl", req.url);
-
-    return NextResponse.redirect(new URL("/signin", req.url));
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
   }
+
   return NextResponse.next();
 }
 
@@ -45,5 +43,6 @@ export const config = {
     "/result/:path*",
     "/playground/:path*",
     "/profile/:path*",
+    "/gallery/:path*",
   ],
 };
