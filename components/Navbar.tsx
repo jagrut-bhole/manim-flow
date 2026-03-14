@@ -1,26 +1,41 @@
-import { useEffect } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, User2, LogOut } from "lucide-react";
+import { ChevronDown, User2, LogOut, Coins } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User } from "next-auth";
 import { useSession, signOut } from "next-auth/react";
+import axios from "axios";
+import { toast } from "sonner";
+import Logo from "@/public/images";
+import Image from "next/image";
+
+interface User {
+  credits: number;
+}
 
 export default function Navbar() {
   const { data: session, status } = useSession();
 
-  const user: User = session?.user;
+  const [user, setUser] = useState<User | null>(null);
 
-  const credits = user?.credits;
-  const plan = user?.plan;
-  const creditsDate = user?.creditsResultAt;
+  const userCredits = async () => {
+    const response = await axios.get('/api/user/credits');
+
+    if (response.data.success) {
+      setUser(response.data.data);
+    } else {
+      toast.error(response.data.message);
+    }
+  }
 
   useEffect(() => {
-    console.log(user);
+    userCredits();
   }, []);
 
   const isLoading = status === "loading";
@@ -29,8 +44,8 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[hsl(240_10%_4%/0.6)] backdrop-blur-xl border-b border-[hsl(240_10%_18%/0.5)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center shrink-0">
-            {/* <span className="text-2xl font-bold bg-linear-to-br from-[hsl(174_72%_56%)] to-[hsl(199_89%_48%)]  bg-clip-text text-transparent"> */}
+          <Link href="/" className="flex items-center shrink-0 gap-2">
+            <Image src={Logo} alt="Logo" className="w-8 h-8" />
             <span className="text-2xl font-bold bg-clip-text text-white">
               ManimFlow
             </span>
@@ -80,6 +95,12 @@ export default function Navbar() {
                   >
                     Testimonials
                   </Link>
+                  <Link
+                    href="/api-documentation"
+                    className="text-muted-foreground hover:text-white transition-colors font-medium"
+                  >
+                    API Documentation
+                  </Link>
                 </>
               )}
             </div>
@@ -88,9 +109,10 @@ export default function Navbar() {
           {/* Right - Auth Section */}
           <div className="flex items-center gap-4">
             {session && (
-              <div className="border-yellow-500 border bg-yellow-500/20 text-yellow-500 p-2 rounded-full font-medium transition-colors">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm font-medium">
+                <Coins size={16} />
                 <span>
-                  Credits: {credits}
+                  {user?.credits} Credits
                 </span>
               </div>
             )}
@@ -100,7 +122,12 @@ export default function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center space-x-2 p-2 rounded-lg  transition-colors focus:outline-none cursor-pointer">
                   <div className="w-8 h-8 rounded-full bg-[hsl(263_70%_58%/0.2)] flex items-center justify-center">
-                    <User2 className="w-4 h-4 text-[hsl(263_70%_58%)]" />
+                    <img
+                      src="https://api.dicebear.com/7.x/avataaars/svg?seed=ManimCreator"
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                    {/* <User2 className="w-4 h-4 text-[hsl(263_70%_58%)]" /> */}
                   </div>
                   <ChevronDown className="w-4 h-4 text-[hsl(240,6%,42%)]" />
                 </DropdownMenuTrigger>

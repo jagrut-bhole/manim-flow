@@ -15,8 +15,8 @@ model User {
 
   //Subscription & credits
   plan            Plan      @default(FREE)
-  credits         Int       @default(10)
-  creditsResultAt DateTime?
+  credits         Int       @default(20)
+  creditsResetAt  DateTime?
 
   // RazorPay
   razorpayCustomerId String? @unique // razorpay customer id

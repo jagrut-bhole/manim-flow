@@ -35,8 +35,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             email: true,
             password: true,
             plan: true,
-            credits: true,
-            creditsResultAt: true
           },
         });
 
@@ -58,8 +56,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name,
           email: user.email,
           plan: user.plan,
-          credits: user.credits,
-          creditsResultAt: user.creditsResultAt,
         };
       },
     }),
@@ -68,10 +64,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.email = user.email;
-        token.name = user.name;
-        token.credits = user.credits;
-        token.creditsResultAt = user.creditsResultAt;
         token.plan = user.plan;
       }
       return token;
@@ -79,10 +71,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
-        session.user.email = token.email as string;
-        session.user.name = token.name as string;
-        session.user.credits = token.credits as number;
-        session.user.creditsResultAt = token.creditsResultAt as Date;
         session.user.plan = token.plan as Plan;
       }
       return session;

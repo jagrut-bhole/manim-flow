@@ -3,21 +3,43 @@ import { auth } from "@/lib/auth";
 import { generateManimCode, LLMProvider } from "@/lib/llm/provider";
 import prisma from "@/lib/prisma";
 
-export async function POST(req: NextRequest) {
-  try {
-    const session = await auth();
+// Credits part
+import { deductCredits, refundCredits } from "@/lib/upstash-redis/creditDeduct";
+import { getAuthenticatedUser } from "@/helpers/authHelpers";
 
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
+export async function POST(req: NextRequest) {
+
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Unauthorized",
+      },
+      {
+        status: 401,
+      },
+    );
+  }
+
+  // Deduct credits atomically before anything
+  const deduction = await deductCredits(user.id, "CODE_GENERATION");
+
+  if (!deduction.success) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: `Insufficient_Credits. You need 1 credit and you have ${deduction.credits} remaining`,
+        credits: deduction.credits
+      },
+      {
+        status: 402
+      }
+    )
+  }
+
+  try {
 
     const { prompt, provider } = await req.json();
 
@@ -59,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     const amimation = await prisma.animation.create({
       data: {
-        userId: session.user.id,
+        userId: user.id,
         prompt: prompt,
         code: result.code,
         status: "GENERATING",
@@ -91,10 +113,13 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Generate code error: ", error);
+
+    await refundCredits(user.id, "CODE_GENERATION");
+
     return NextResponse.json(
       {
         success: false,
-        message: "Internal server error while generating code",
+        message: "Internal Server Error while generating code",
       },
       {
         status: 500,

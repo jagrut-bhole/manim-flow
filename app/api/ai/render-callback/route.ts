@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { refundCredits } from "@/lib/upstash-redis/creditDeduct";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,6 @@ export async function POST(req: NextRequest) {
     }
 
     if (success) {
-      // Update animation with video data
       await prisma.animation.update({
         where: { id: animation_id },
         data: {
@@ -53,7 +53,12 @@ export async function POST(req: NextRequest) {
         message: "Animation updated successfully",
       });
     } else {
-      // Update to failed status
+      // Look up userId from the animation record — webhook has no session cookie
+      const animation = await prisma.animation.findUnique({
+        where: { id: animation_id },
+        select: { userId: true },
+      });
+
       await prisma.animation.update({
         where: { id: animation_id },
         data: {
@@ -61,6 +66,11 @@ export async function POST(req: NextRequest) {
           errorMessage: error || "Video rendering failed",
         },
       });
+
+      // Refund credits since rendering failed
+      if (animation?.userId) {
+        await refundCredits(animation.userId, "VIDEO_GENERATION");
+      }
 
       console.log(`Animation ${animation_id} failed: ${error}`);
 
@@ -70,6 +80,8 @@ export async function POST(req: NextRequest) {
       });
     }
   } catch (error: any) {
+    // NOTE: No refund here — we don't know if the video succeeded or failed.
+    // A catch here means our own DB code failed, not that the video failed.
     console.error("Callback Error:", error);
     return NextResponse.json(
       { success: false, message: error.message },

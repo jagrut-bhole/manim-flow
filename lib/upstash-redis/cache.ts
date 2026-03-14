@@ -6,6 +6,7 @@ export const cacheKeys = {
   jobId: (jobId: string) => `job:${jobId}`,
 
   credits: (userId: string) => `credits:${userId}`,
+  pendingDeduction: (userId: string, opId: string) => `pending_deduction:${userId}:${opId}`,
 
   activeRender: (userId: string) => `rendering:${userId}`,
 
@@ -20,7 +21,7 @@ export const cacheKeys = {
 export const CacheTTL = {
   user: 60 * 60, // 1 hour
   job: 60 * 60 * 24, // 1 day
-  credits: -1, // no expiry
+  credits: 60 * 60 * 24, // 1 day
   rendering: 60 * 10, // 10 minutes
   animation: 60 * 60 * 6, // 6 hours
   userAnimatons: 60 * 10, // 10 minutes
