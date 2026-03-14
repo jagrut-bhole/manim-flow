@@ -33,3 +33,45 @@ export const TYPEWRITER_PHRASES = [
   "Demonstrate the limit definition with epsilon-delta",
   "Animate sorting algorithms comparing bubble sort vs quicksort",
 ];
+
+export const PLANS = [
+  {
+    name: "Free",
+    price: "₹0",
+    period: " forever",
+    description: "Perfect for getting started and experimenting",
+    features: [
+      "30 credits per month",
+      "480p video quality",
+    ],
+    cta: "Get Started Free",
+    available: true,
+  },
+  {
+    name: "Pro",
+    price: "₹199",
+    period: " per month",
+    description: "For power users who need more",
+    badge: "Coming Soon",
+    features: [
+      "60 credits per month",
+      "720p & 1080p video quality",
+    ],
+    cta: "Get Pro",
+    available: true,
+  },
+  {
+    name: "Credit Pack",
+    price: "₹99",
+    period: " one time",
+    description: "Need a quick top-up? Buy credits as you go.",
+    badge: "Popular",
+    features: [
+      "30 instant credits",
+      "High video quality",
+      "Never expires",
+    ],
+    cta: "Buy Credits",
+    available: true,
+  },
+];

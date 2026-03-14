@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Mail, Lock, Share2, Code } from "lucide-react";
+import { User, Mail, Lock, Share2, Code, Coins, BadgeCheck, Calendar1, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import { VideoThumbnail } from "@/components/ui/VideoPlayer";
 import { EditorView } from "@/components/Editor";
@@ -35,7 +35,18 @@ interface Animation {
   download: number;
 }
 
+interface User {
+  id: string,
+  name: string,
+  email: string,
+  credits: number,
+  plan: string,
+  creditsResetAt: Date | null,
+  createdAt: Date | null
+}
+
 interface ProfileData {
+  userDetails: User,
   animations: Animation[];
 }
 
@@ -272,7 +283,7 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-sm text-neutral-500">Name</p>
                     <p className="text-white font-medium">
-                      {session?.user?.name || "User"}
+                      {profile?.userDetails.name || "User"}
                     </p>
                   </div>
                 </div>
@@ -287,14 +298,14 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-sm text-neutral-500">Email</p>
                     <p className="text-white font-medium">
-                      {session?.user?.email || "email@example.com"}
+                      {profile?.userDetails.email || "email@example.com"}
                     </p>
                   </div>
                 </div>
               </div>
 
               {/* Password */}
-              <div className="flex items-center justify-between py-4">
+              <div className="flex items-center justify-between py-4 border-b border-neutral-800">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                     <Lock className="w-5 h-5 text-white" />
@@ -371,6 +382,53 @@ export default function ProfilePage() {
                   </DialogContent>
                 </Dialog>
               </div>
+
+              {/* Credits */}
+              <div className="flex items-center justify-between py-4 border-b border-neutral-800">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                    <Coins className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-neutral-500">Credits</p>
+                    <p className="text-white font-medium">
+                      {profile?.userDetails?.credits ?? 0}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Credits Info Tooltip */}
+                <div className="relative group flex items-center justify-center">
+                  <button className="text-neutral-500 hover:text-white transition-colors focus:outline-none" tabIndex={0} aria-label="Credits reset info">
+                    <Info className="w-5 h-5 cursor-help" />
+                  </button>
+                  <div className="absolute right-0 top-full mt-2 w-[220px] p-3 rounded-xl bg-neutral-900 border border-neutral-800 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50">
+                    <p className="text-xs text-neutral-400 mb-1">Credits Reset Date</p>
+                    <p className="text-sm font-medium text-white flex items-center gap-2">
+                      <Calendar1 className="w-4 h-4 text-neutral-500" />
+                      {profile?.userDetails?.creditsResetAt
+                        ? new Date(profile.userDetails.creditsResetAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+                        : "Never"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Plan */}
+              <div className="flex items-center justify-between py-4 border-b border-neutral-800">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                    <BadgeCheck className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-neutral-500">Subscription</p>
+                    <p className="text-white font-medium">
+                       {profile?.userDetails?.plan || "FREE"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </motion.div>
 

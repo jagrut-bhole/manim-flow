@@ -4,22 +4,22 @@ import { getAuthenticatedUser } from "@/helpers/authHelpers";
 import { getUserAnimations } from "@/helpers/animationHelpers";
 
 export async function GET(req: NextRequest) {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Unauthorized Request"
+      },
+      {
+        status: 402
+      }
+    )
+  }
   try {
-    const session = await getAuthenticatedUser();
 
-    if (!session) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Unauthorized Request"
-        },
-        {
-          status: 402
-        }
-      )
-    }
-
-    const userId = session.id;
+    const userId = user.id;
 
     const animations = await getUserAnimations(userId);
 
@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
         success: true,
         message: "Profile fetched successfully",
         data: {
+          userDetails: user,
           animations: animations ?? []
         },
       },

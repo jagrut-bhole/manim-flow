@@ -1,39 +1,5 @@
-// components/landing/Pricing.tsx
-
-const PLANS = [
-  {
-    name: "Free",
-    price: "₹0",
-    period: "forever",
-    description: "Perfect for getting started and experimenting",
-    features: [
-      "10 code generations per day",
-      "5 video renders per day",
-      "Llama 3.3 70B & Gemini 1.5 pro AI model",
-      "480p video quality",
-    ],
-    cta: "Get Started Free",
-    highlight: false,
-    available: true,
-  },
-  {
-    name: "Pro",
-    price: "₹100",
-    period: "per month",
-    description: "For power users who need more",
-    badge: "Coming Soon",
-    features: [
-      "50 code generations per day",
-      "25 video renders per day",
-      "GPT-4 Turbo & Gemini 2.5 pro AI model",
-      "720p & 1080p video quality",
-      "Forever video storage",
-    ],
-    cta: "Coming Soon",
-    highlight: false,
-    available: false,
-  },
-];
+"use client";
+import { PLANS } from "@/constants/constants";
 
 export function Pricing() {
   return (
@@ -54,16 +20,17 @@ export function Pricing() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {PLANS.map((plan, idx) => (
             <div
               key={idx}
-              className={`relative rounded-2xl p-8 ${
-                plan.highlight
-                  ? "bg-linear-to-br from-blue-500/10 to-purple-500/10 border-2 border-blue-500/50"
-                  : "bg-white/5 border border-white/10"
-              }  transition-transform duration-300`}
+              className={`relative rounded-2xl p-8 bg-white/5 border border-white/10 transition-transform duration-300 relative`}
             >
+              {plan.badge && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-cyan-500 text-black text-xs font-bold rounded-full uppercase tracking-wider">
+                  {plan.badge}
+                </div>
+              )}
               {/* Plan Name */}
               <h3 className="text-2xl font-bold text-white mb-2">
                 {plan.name}
@@ -85,9 +52,7 @@ export function Pricing() {
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <svg
-                      className={`w-5 h-5 mt-0.5 shrink-0 ${
-                        plan.highlight ? "text-blue-400" : "text-green-400"
-                      }`}
+                      className={`w-5 h-5 mt-0.5 shrink-0 text-green-400`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -107,13 +72,7 @@ export function Pricing() {
               {/* CTA Button */}
               <button
                 disabled={!plan.available}
-                className={`w-full py-4 rounded-xl font-semibold transition-all duration-300 ${
-                  plan.available
-                    ? plan.highlight
-                      ? "bg-linear-to-r from-blue-500 to-purple-500 text-white hover:shadow-lg hover:shadow-blue-500/50"
-                      : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
-                    : "bg-gray-500/20 text-gray-500 cursor-not-allowed"
-                }`}
+                className={`w-full py-4 rounded-xl font-semibold transition-all duration-300 bg-white/10 text-white hover:bg-white/20 border border-white/20 bg-gray-500/20 text-gray-500 cursor-not-allowed"`}
               >
                 {plan.cta}
               </button>

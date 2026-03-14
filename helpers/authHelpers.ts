@@ -6,13 +6,18 @@ import {
     cacheKeys,
 } from "@/lib/upstash-redis/cache";
 import { auth } from "@/lib/auth";
+import { checkAndResetCredit } from "@/lib/upstash-redis/creditReset";
+import { redis } from "@/lib/upstash-redis/redis";
 
 export type CacheUser = {
     id: string;
     email: string;
     name: string;
     credits: Number;
-    plan: string;
+    plan: string; 
+    creditsResetAt: Date | null,
+    createdAt: Date | null,
+
 };
 
 export async function getAuthenticatedUser(): Promise<CacheUser | null> {
@@ -46,6 +51,8 @@ export async function getAuthenticatedUser(): Promise<CacheUser | null> {
                 email: true,
                 credits: true,
                 plan: true,
+                creditsResetAt: true,
+                createdAt: true,
             },
         });
 
@@ -58,6 +65,56 @@ export async function getAuthenticatedUser(): Promise<CacheUser | null> {
         return user;
     } catch (error) {
         console.log("Error getting authenticated user: ", error);
+        return null;
+    }
+}
+
+export async function getUserCredits(userId: string) {
+    try {
+
+        await checkAndResetCredit(userId);
+
+        const cacheKey = cacheKeys.credits(userId);
+        const cachedData = await getCachedData<number>(cacheKey);
+
+        if (cachedData !== null) {
+            console.log("Cache Hitt...");
+            const resetAt = await prisma.user.findUnique({
+                where: {
+                    id: userId
+                },
+                select: {
+                    creditsResetAt: true
+                }
+            })
+            return {
+                credits: cachedData,
+                creditsResetAt: resetAt?.creditsResetAt ?? null,
+            }
+        }
+
+        console.log("Cache Miss...");
+        console.log("Getting credits from the DB: ");
+
+        const userCredits = await prisma.user.findUnique({
+            where: {
+                id: userId,
+            },
+            select: {
+                credits: true,
+                creditsResetAt: true,
+            }
+        });
+
+        if (!userCredits) {
+            return null;
+        }
+
+        await redis.set(cacheKey, userCredits.credits);
+
+        return userCredits;
+    } catch (error) {
+        console.log("Error getting user credits: ", error);
         return null;
     }
 }

@@ -2,6 +2,9 @@ import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/helpers/authHelpers";
 
+// Credits Part
+import { deductCredits, refundCredits } from "@/lib/upstash-redis/creditDeduct";
+
 const PYTHON_SERVICE_URL =
   process.env.PYTHON_SERVICE_URL || "http://localhost:8000";
 
@@ -9,6 +12,33 @@ export const maxDuration = 60; // 1 minute is enough since we return immediately
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Unauthorized",
+      },
+      {
+        status: 401
+      }
+    )
+  }
+
+  // Credits Deduction Part - atomically
+  const deduction = await deductCredits(user.id, "VIDEO_GENERATION");
+
+  if (!deduction.success) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: `Insufficient_Credits. You need 2 credit and you have ${deduction.credits} remaining`,
+        credits: deduction.credits
+      }
+    )
+  }
+
   try {
     const session = await getAuthenticatedUser();
 
@@ -82,8 +112,10 @@ export async function POST(req: NextRequest) {
         animation_id: animationId,
         webhook_url: webhookUrl,
       }),
-    }).catch((error) => {
-      console.error("Failed to start render job:", error);
+    }).catch((fetchError) => {
+      console.error("Failed to start render job:", fetchError);
+      
+      refundCredits(user.id, "VIDEO_GENERATION").catch(console.error);
 
       prisma.animation
         .update({
@@ -111,6 +143,7 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: any) {
     console.error("Render Error: ", error);
+    await refundCredits(user.id, "VIDEO_GENERATION");
     return NextResponse.json(
       {
         success: false,
