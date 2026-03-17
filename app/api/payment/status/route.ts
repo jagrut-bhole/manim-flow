@@ -8,7 +8,7 @@ import { getCashfreeBaseUrl } from "@/lib/payment/cashfree";
 // ─── Webhook fallback: verify with Cashfree directly and credit the user ───────
 async function settlePendingOrder(orderId: string) {
     // Check Cashfree for the real payment status
-    const cfRes = await fetch(`${getCashfreeBaseUrl}/orders/${orderId}/payments`, {
+    const cfRes = await fetch(`${getCashfreeBaseUrl()}/orders/${orderId}/payments`, {
         headers: {
             "x-api-version": "2023-08-01",
             "x-client-id": process.env.CASHFREE_APP_ID!,
