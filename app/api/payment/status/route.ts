@@ -3,12 +3,12 @@ import { NextResponse, NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/helpers/authHelpers";
 import { redis } from "@/lib/upstash-redis/redis";
 import { cacheKeys } from "@/lib/upstash-redis/cache";
-import { CASHFREE_BASE_URL } from "@/lib/payment/cashfree";
+import { getCashfreeBaseUrl } from "@/lib/payment/cashfree";
 
 // ─── Webhook fallback: verify with Cashfree directly and credit the user ───────
 async function settlePendingOrder(orderId: string) {
     // Check Cashfree for the real payment status
-    const cfRes = await fetch(`${CASHFREE_BASE_URL}/orders/${orderId}/payments`, {
+    const cfRes = await fetch(`${getCashfreeBaseUrl}/orders/${orderId}/payments`, {
         headers: {
             "x-api-version": "2023-08-01",
             "x-client-id": process.env.CASHFREE_APP_ID!,
