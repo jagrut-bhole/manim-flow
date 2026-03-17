@@ -2,58 +2,103 @@ import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
 export default function TermsAndConditions() {
-  return (
-    <div className="min-h-screen relative flex flex-col bg-[#030303] text-gray-300">
-      <Navbar />
-      <div className="flex-1 mt-24 px-6 py-12 container mx-auto max-w-4xl relative z-10 w-full">
-        <h1 className="text-4xl md:text-5xl font-bold mb-8 text-white tracking-tight">Terms and Conditions</h1>
-        <p className="mb-8 text-gray-400">Last updated: {new Date().toLocaleDateString()}</p>
+    return (
+        <div className="min-h-screen relative flex flex-col bg-[#030303] text-gray-300">
+            <Navbar />
+            <div className="flex-1 mt-24 px-6 py-12 container mx-auto max-w-4xl relative z-10 w-full">
+                <h1 className="text-4xl md:text-5xl font-bold mb-8 text-white tracking-tight">
+                    Terms and Conditions
+                </h1>
+                <p className="mb-8 text-gray-400">
+                    Last updated: {new Date().toLocaleDateString()}
+                </p>
 
-        <div className="space-y-8 text-base md:text-lg leading-relaxed">
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">1. Agreement to Terms</h2>
-            <p>
-              By accessing or using ManimFlow, you agree to be bound by these Terms and Conditions. If you disagree with any part of the terms, you may not access our service.
-            </p>
-          </section>
+                <div className="space-y-8 text-base md:text-lg leading-relaxed">
+                    <section>
+                        <h2 className="text-2xl font-semibold text-white mb-4">
+                            1. Agreement to Terms
+                        </h2>
+                        <p>
+                            By accessing or using ManimFlow, you agree to be bound by these Terms
+                            and Conditions. If you disagree with any part of the terms, you may not
+                            access our service.
+                        </p>
+                    </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">2. Description of Service</h2>
-            <p>
-              ManimFlow provides an AI-powered platform to generate mathematical animations using text prompts. We allow users to enter descriptions and output relevant video animations based on the Manim engine.
-            </p>
-          </section>
+                    <section>
+                        <h2 className="text-2xl font-semibold text-white mb-4">
+                            2. Description of Service
+                        </h2>
+                        <p>
+                            ManimFlow provides an AI-powered platform to generate mathematical
+                            animations using text prompts. We allow users to enter descriptions and
+                            output relevant video animations based on the Manim engine.
+                        </p>
+                    </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">3. Accounts and Credits</h2>
-            <p>
-              When you create an account, you are responsible for safeguarding your password and any activities or actions under your account. Purchases of "Credit Packs" or subscriptions give you access to generation credits. These credits are tied to your account and may be subject to fair usage policies.
-            </p>
-          </section>
+                    <section>
+                        <h2 className="text-2xl font-semibold text-white mb-4">
+                            3. Accounts and Credits
+                        </h2>
+                        <p>
+                            When you create an account, you are responsible for safeguarding your
+                            password and any activities or actions under your account. Purchases of
+                            "Credit Packs" or subscriptions give you access to generation credits.
+                            These credits are tied to your account and may be subject to fair usage
+                            policies.
+                        </p>
+                    </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">4. Acceptable Use</h2>
-            <p>
-              You agree not to use the service for any illegal or unauthorized purpose. You must not, in the use of the Service, violate any laws in your jurisdiction (including but not limited to copyright laws).
-            </p>
-          </section>
+                    <section>
+                        <h2 className="text-2xl font-semibold text-white mb-4">
+                            4. Acceptable Use
+                        </h2>
+                        <p>
+                            You agree not to use the service for any illegal or unauthorized
+                            purpose. You must not, in the use of the Service, violate any laws in
+                            your jurisdiction (including but not limited to copyright laws).
+                        </p>
+                    </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">5. Intellectual Property</h2>
-            <p>
-              The animations generated by our AI based on your prompts are yours to use. However, the core intellectual property of ManimFlow—including our logos, UI, rendering engine pipelines, and platform design—remains the exclusive property of ManimFlow.
-            </p>
-          </section>
+                    <section>
+                        <h2 className="text-2xl font-semibold text-white mb-4">
+                            5. Intellectual Property
+                        </h2>
+                        <p>
+                            The animations generated by our AI based on your prompts are yours to
+                            use. However, the core intellectual property of ManimFlow—including our
+                            logos, UI, rendering engine pipelines, and platform design—remains the
+                            exclusive property of ManimFlow.
+                        </p>
+                    </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">6. Changes to Terms</h2>
-            <p>
-              We reserve the right, at our sole discretion, to modify or replace these Terms at any time. We will try to provide at least 30 days' notice prior to any new terms taking effect.
-            </p>
-          </section>
+                    <section>
+                        <h2 className="text-2xl font-semibold text-white mb-4">
+                            6. Changes to Terms
+                        </h2>
+                        <p>
+                            We reserve the right, at our sole discretion, to modify or replace these
+                            Terms at any time. We will try to provide at least 30 days' notice prior
+                            to any new terms taking effect.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-2xl font-semibold text-white mb-4">7. Contact Us</h2>
+                        <p>
+                            If you have any questions about these Terms, please contact us at
+                            <a
+                                href="mailto:jagrutbhole10@gmail.com"
+                                className="text-white hover:underline mx-1"
+                            >
+                                jagrutbhole10@gmail.com
+                            </a>
+                            .
+                        </p>
+                    </section>
+                </div>
+            </div>
+            <Footer />
         </div>
-      </div>
-      <Footer />
-    </div>
-  );
+    );
 }

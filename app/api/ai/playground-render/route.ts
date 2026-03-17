@@ -5,26 +5,24 @@ import { getAuthenticatedUser } from "@/helpers/authHelpers";
 // Credits Part
 import { deductCredits, refundCredits } from "@/lib/upstash-redis/creditDeduct";
 
-const PYTHON_SERVICE_URL =
-    process.env.PYTHON_SERVICE_URL || "http://localhost:8000";
+const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || "http://localhost:8000";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-
     const user = await getAuthenticatedUser();
 
     if (!user) {
         return NextResponse.json(
             {
                 success: false,
-                message: "Unauthorized Request"
+                message: "Unauthorized Request",
             },
             {
-                status: 401
+                status: 401,
             }
-        )
+        );
     }
 
     const deduction = await deductCredits(user.id, "VIDEO_GENERATION");
@@ -33,13 +31,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
             {
                 success: false,
-                message: "Insufficient_Credits. You need 2 credits and you have ${deduction.credits} remaining",
-                credits: deduction.credits
+                message:
+                    "Insufficient_Credits. You need 2 credits and you have ${deduction.credits} remaining",
+                credits: deduction.credits,
             },
             {
-                status: 402
+                status: 402,
             }
-        )
+        );
     }
 
     try {
@@ -51,7 +50,7 @@ export async function POST(req: NextRequest) {
                     success: false,
                     message: "Unauthorized",
                 },
-                { status: 401 },
+                { status: 401 }
             );
         }
 
@@ -63,7 +62,7 @@ export async function POST(req: NextRequest) {
                     success: false,
                     message: "Code is required",
                 },
-                { status: 400 },
+                { status: 400 }
             );
         }
 
@@ -82,9 +81,7 @@ export async function POST(req: NextRequest) {
         // Construct webhook URL
         const baseUrl =
             process.env.NEXT_PUBLIC_APP_URL ||
-            (process.env.VERCEL_URL
-                ? `https://${process.env.VERCEL_URL}`
-                : null) ||
+            (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
             req.headers.get("origin") ||
             "http://localhost:3000";
 
@@ -94,7 +91,7 @@ export async function POST(req: NextRequest) {
             "[Playground Render] Webhook URL for animation:",
             animation.id,
             "->",
-            webhookUrl,
+            webhookUrl
         );
 
         // Fire-and-forget: send to Python service
@@ -135,7 +132,7 @@ export async function POST(req: NextRequest) {
                     status: "RENDERING",
                 },
             },
-            { status: 202 },
+            { status: 202 }
         );
     } catch (error: any) {
         console.error("[Playground Render] Error:", error);
@@ -147,7 +144,7 @@ export async function POST(req: NextRequest) {
                 success: false,
                 message: error.message,
             },
-            { status: 500 },
+            { status: 500 }
         );
     }
 }

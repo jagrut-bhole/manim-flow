@@ -1,0 +1,11 @@
+.next/dev/types/validator.ts(378,31): error TS2344: Type 'typeof import("D:/Projects/MANIM/manim-flow/app/api/v1/jobs/[jobId]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/v1/jobs/[jobId]">'.
+  Types of property 'GET' are incompatible.
+    Type '(req: NextRequest, { params }: { params: { jobId: string; }; }) => Promise<NextResponse<{ error: string; message: string; }> | NextResponse<Record<string, any>>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ jobId: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ jobId: string; }>; }' is not assignable to type '{ params: { jobId: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'jobId' is missing in type 'Promise<{ jobId: string; }>' but required in type '{ jobId: string; }'.
+app/(app)/(api)/(api-service)/api-pricing/page.tsx(7,22): error TS7016: Could not find a declaration file for module '@cashfreepayments/cashfree-js'. 'D:/Projects/MANIM/manim-flow/node_modules/@cashfreepayments/cashfree-js/dist/script.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/cashfreepayments__cashfree-js` if it exists or add a new declaration (.d.ts) file containing `declare module '@cashfreepayments/cashfree-js';`
+app/(app)/pricing/page.tsx(7,22): error TS7016: Could not find a declaration file for module '@cashfreepayments/cashfree-js'. 'D:/Projects/MANIM/manim-flow/node_modules/@cashfreepayments/cashfree-js/dist/script.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/cashfreepayments__cashfree-js` if it exists or add a new declaration (.d.ts) file containing `declare module '@cashfreepayments/cashfree-js';`

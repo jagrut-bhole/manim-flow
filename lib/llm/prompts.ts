@@ -12,6 +12,7 @@ export const MANIM_SYSTEM_PROMPT = `
     8. Code must be complete, self-contained, and ready to execute
     9. Use appropriate Manim objects based on the animation type
     10. Follow proper animation methods and timing controls
+    11. Avoid of generati
 
     TEXT AND SYMBOLS - VERY IMPORTANT:
     - **PREFER Text() FOR SIMPLE LABELS AND SYMBOLS** - MathTex requires LaTeX installation
@@ -41,13 +42,24 @@ export const MANIM_SYSTEM_PROMPT = `
       sqrt = MathTex(r"\\sqrt{2}")
 
       IMPORTANT - MATHTEX WARNING:
-      1. MathTex requires LaTeX to be installed on the system (MiKTeX on Windows)
-      2. If LaTeX is not available, MathTex will fail with "FileNotFoundError"
-      3. **ALWAYS prefer Text() for simple labels, numbers, and basic symbols**
-      4. Unicode symbols in Text work without LaTeX: ↑↓←→▲▼◀▶★●■□
-      5. Only use MathTex for complex equations that truly need LaTeX rendering
-      6. If using MathTex, always use raw strings: r"..."
-      7. Use double backslashes for LaTeX commands: \\frac, \\sqrt
+      CRITICAL - LATEX NOT AVAILABLE ON THIS SERVER:
+      LaTeX is NOT installed on the rendering server. Any use of MathTex() or Tex() WILL crash the render with FileNotFoundError.
+
+      BANNED - NEVER USE THESE:
+      - MathTex() — crashes without LaTeX
+      - Tex() — crashes without LaTeX  
+      - Any LaTeX commands (\\frac, \\sqrt, \\int etc.)
+
+      MANDATORY ALTERNATIVES:
+      - MathTex(r"a^2 + b^2 = c^2") → Text("a² + b² = c²")
+      - MathTex(r"\\frac{a}{b}") → Text("a/b") or Text("a ÷ b")
+      - MathTex(r"\\sqrt{2}") → Text("√2")
+      - MathTex(r"\\pi") → Text("π")
+      - MathTex(r"\\alpha") → Text("α")
+      - MathTex(r"\\sum") → Text("∑")
+      - MathTex(r"\\int") → Text("∫")
+
+      Unicode has all the math symbols you need. ALWAYS use Text() with Unicode.
 
       AVOID THESE (cause errors):
         - MathTex for simple labels (use Text instead)
@@ -57,6 +69,12 @@ export const MANIM_SYSTEM_PROMPT = `
         -TikZ diagrams
         -Complex matrices (simple 2x2 only)
         -Chemical formulas (use text instead)
+
+      NUMPY RULES - CRITICAL:
+      - NEVER use .normalize() on numpy arrays — it does not exist
+      - For normalizing vectors: use direction / np.linalg.norm(direction)
+      - NEVER use vector math methods that don't exist on ndarray
+      - When using updaters with vectors, always check the math is plain numpy
 
       WRONG - DO NOT USE:
         up_label = MathTex(r"\\uparrow")  # Don't use MathTex for arrows!
@@ -263,17 +281,17 @@ class PythagoreanTheorem(Scene):
 Now generate code based on user's request.`;
 
 export function cleanManimCode(code: string): string {
-  let cleaned = code.replace(/```python\n?/g, "");
-  cleaned = cleaned.replace(/```\n?/g, "");
+    let cleaned = code.replace(/```python\n?/g, "");
+    cleaned = cleaned.replace(/```\n?/g, "");
 
-  cleaned = cleaned.trim();
+    cleaned = cleaned.trim();
 
-  if (!cleaned.startsWith("from manim")) {
-    const match = cleaned.match(/from manim import \*[\s\S]*/);
-    if (match) {
-      cleaned = match[0];
+    if (!cleaned.startsWith("from manim")) {
+        const match = cleaned.match(/from manim import \*[\s\S]*/);
+        if (match) {
+            cleaned = match[0];
+        }
     }
-  }
 
-  return cleaned;
+    return cleaned;
 }

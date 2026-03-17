@@ -9,7 +9,7 @@ export type cacheGalleryAnimations = {
     userId: string;
     videoUrl: string | null;
     thumbnailUrl: string | null;
-}
+};
 
 export async function getGalleryAnimations() {
     try {
@@ -17,7 +17,7 @@ export async function getGalleryAnimations() {
 
         const cachedData = await getCachedData<cacheGalleryAnimations[]>(cacheKey);
 
-        if(cachedData) {
+        if (cachedData) {
             console.log("Cache Hittt...");
             return cachedData;
         }
@@ -28,7 +28,7 @@ export async function getGalleryAnimations() {
         const animations = await prisma.animation.findMany({
             where: {
                 forGallery: true,
-            }, 
+            },
             select: {
                 id: true,
                 model: true,
@@ -40,10 +40,10 @@ export async function getGalleryAnimations() {
             },
             orderBy: {
                 updatedAt: "desc",
-            }
-        })
+            },
+        });
 
-        if(!animations) {
+        if (!animations) {
             return null;
         }
 

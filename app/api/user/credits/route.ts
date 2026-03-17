@@ -9,12 +9,12 @@ export async function GET() {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Unauthorized"
+                    message: "Unauthorized",
                 },
                 {
-                    status: 401
+                    status: 401,
                 }
-            )
+            );
         }
 
         const data = await getUserCredits(user.id);
@@ -23,19 +23,20 @@ export async function GET() {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "User credits not found"
+                    message: "User credits not found",
                 },
                 {
-                    status: 404
+                    status: 404,
                 }
-            )
-        }data
+            );
+        }
+        data;
 
-        const daysUntilReset =
-            data.creditsResetAt
-                ? Math.ceil(
-                    (new Date(data.creditsResetAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-                ) : 30
+        const daysUntilReset = data.creditsResetAt
+            ? Math.ceil(
+                  (new Date(data.creditsResetAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+              )
+            : 30;
 
         return NextResponse.json(
             {
@@ -45,22 +46,21 @@ export async function GET() {
                     credits: data.credits,
                     creditsResetAt: data.creditsResetAt,
                     daysUntilReset: Math.max(0, daysUntilReset),
-                    plan: user.plan
-                }
+                },
             },
             {
-                status: 200
+                status: 200,
             }
-        )
+        );
     } catch (error) {
         console.log("Error getting user credits: ", error);
         return NextResponse.json(
             {
                 success: false,
-                message: "Internal server error"
+                message: "Internal server error",
             },
             {
-                status: 500
+                status: 500,
             }
         );
     }

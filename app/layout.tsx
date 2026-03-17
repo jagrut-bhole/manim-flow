@@ -6,36 +6,36 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/AuthProvider";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+    variable: "--font-geist-sans",
+    subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+    variable: "--font-geist-mono",
+    subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Manim FLow",
-  description: "Cursor for 2D animated libraries",
+    title: "Manim FLow",
+    description: "Cursor for 2D animated libraries",
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <AuthProvider>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          suppressHydrationWarning
-        >
-          {children}
-          <Toaster position="top-right" duration={1500} />
-        </body>
-      </AuthProvider>
-    </html>
-  );
+    return (
+        <html lang="en">
+            <AuthProvider>
+                <body
+                    className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+                    suppressHydrationWarning
+                >
+                    {children}
+                    <Toaster position="top-right" duration={1500} />
+                </body>
+            </AuthProvider>
+        </html>
+    );
 }

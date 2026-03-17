@@ -14,70 +14,87 @@ model User {
   password String
 
   //Subscription & credits
-  plan            Plan      @default(FREE)
-  credits         Int       @default(20)
-  creditsResetAt  DateTime?
+  // plan           Plan      @default(FREE)
+  credits        Int       @default(30)
+  purchasedCredits Int     @default(0)
+  creditsResetAt DateTime?
 
-  // RazorPay
-  razorpayCustomerId String? @unique // razorpay customer id
+  // Admin
+  isAdmin Boolean @default(false)
+
+  // Cashfree
+  cashfreeCustomerId String? @unique // cashfree customer id
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  animations       Animation[]
-  subscriptions    Subscription[]
-  apiKeys          ApiKey[]
-  jobs             Job[]
+  animations      Animation[]
+  apiKeys         ApiKey[]
+  // subscriptions   Subscription[]
+  // jobs            Job[]
+  creditPurchases CreditPurchase[]
 
   @@index([email])
 }
 
-model Subscription {
-  id     String @id @default(uuid())
+model CreditPurchase {
+  id String @id @default(uuid())
+
   userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credits    Int
+  amountPaid Int
 
-  plan   Plan               @default(FREE)
-  status SubscriptionStatus @default(ACTIVE)
+  // CasHfree
+  cashfreeOrderId   String  @unique // order id from cashfree
+  cashfreePaymentId String? // payment id after success
 
-  // Razorpay identifiers
-  razorpaySubscriptionId String? @unique
-  razorpayPaymentId      String?
-
-  currentPeriodStart DateTime
-  currentPeriodEnd   DateTime
-
-  cancelledAt DateTime?
+  status CreditPurchaseStatus @default(PENDING)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
-  @@index([razorpaySubscriptionId])
+  @@index([cashfreeOrderId])
 }
 
-model Job {
-  id     String @id @default(uuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  status     JobStatus @default(QUEUED)
-  attempts   Int       @default(0)
-  maxRetries Int       @default(3)
-
-  queuedAt    DateTime  @default(now())
-  startedAt   DateTime?
-  completedAt DateTime?
-
-  errorMessage String? @db.Text
-  workerLog    String? @db.Text
-
-  animation        Animation?
-
-  @@index([userId])
-  @@index([status])
-}
+// When we Scale
+/**
+ * model Subscription {
+ * id     String @id @default(uuid())
+ * userId String
+ * user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ * plan   Plan               @default(FREE)
+ * status SubscriptionStatus @default(ACTIVE)
+ * // CashFree identifiers
+ * cashfreeSubscriptionId String? @unique
+ * cashfreePaymentId      String? // last successful payment
+ * currentPeriodStart DateTime
+ * currentPeriodEnd   DateTime
+ * cancelledAt DateTime?
+ * createdAt DateTime @default(now())
+ * updatedAt DateTime @updatedAt
+ * @@index([userId])
+ * @@index([cashfreeSubscriptionId])
+ * }
+ * model Job {
+ * id     String @id @default(uuid())
+ * userId String
+ * user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+ * status     JobStatus @default(QUEUED)
+ * attempts   Int       @default(0)
+ * maxRetries Int       @default(3)
+ * queuedAt    DateTime  @default(now())
+ * startedAt   DateTime?
+ * completedAt DateTime?
+ * errorMessage String? @db.Text
+ * workerLog    String? @db.Text
+ * animation Animation?
+ * @@index([userId])
+ * @@index([status])
+ * }
+ */
 
 model Animation {
   id String @id @default(cuid())
@@ -85,12 +102,12 @@ model Animation {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  //Link to the job that created this
-  JobId String? @unique
-  job   Job?    @relation(fields: [JobId], references: [id])
+  //Link to the job that created this -> when we scale
+  // JobId String? @unique
+  // job   Job?    @relation(fields: [JobId], references: [id])
 
-  prompt String @db.Text
-  code   String @db.Text
+  prompt String  @db.Text
+  code   String  @db.Text
   model  String? @default("llama-3.3-70b-versatile")
 
   source AnimationSource @default(WEBSITE) // website, api, playground
@@ -126,8 +143,10 @@ model ApiKey {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  name     String // user labels it
-  key      String  @unique // "mf_live_abc123..."
+  name      String // user labels it
+  keyPrefix String @unique // "mf_live_abc123..."
+  keyHash   String
+
   credits  Int     @default(0) // separate credits for API usage
   isActive Boolean @default(true)
 
@@ -137,10 +156,9 @@ model ApiKey {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([key])
+  @@index([keyPrefix])
   @@index([userId])
 }
-
 
 enum Status {
   GENERATING
@@ -149,27 +167,34 @@ enum Status {
   FAILED
 }
 
-enum JobStatus {
-  QUEUED
-  PROCESSING
-  COMPLETED
-  FAILED
-}
-
-enum Plan {
-  FREE
-  PRO
-}
-
-enum SubscriptionStatus {
-  ACTIVE
-  CANCELLED
-  EXPIRED
-  PAST_DUE
-}
+/**
+ * enum JobStatus {
+ * QUEUED
+ * PROCESSING
+ * COMPLETED
+ * FAILED
+ * }
+ * enum Plan {
+ * FREE
+ * PRO
+ * }
+ * enum SubscriptionStatus {
+ * ACTIVE
+ * CANCELLED
+ * EXPIRED
+ * PAST_DUE
+ * }
+ */
 
 enum AnimationSource {
   WEBSITE
   API
   PLAYGROUND
+}
+
+enum CreditPurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
 }
