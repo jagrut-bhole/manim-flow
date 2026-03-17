@@ -10,8 +10,7 @@ export function getCashfreeBaseUrl(): string {
 export const CREDIT_PACKS = {
     PACK_30: {
         credits: 30,
-        // amount: 99,
-        amount: 1,
+        amount: 99,
         name: "30 Credits Pack",
     },
     PACK_60: {
