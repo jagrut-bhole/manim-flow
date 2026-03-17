@@ -2,10 +2,10 @@ import crypto from "crypto";
 
 const CASHFREE_APP_ID = process.env.CASHFREE_APP_ID!;
 const CASHFREE_SECRET_KEY = process.env.CASHFREE_SECRET_KEY!;
-const CASHFREE_ENV = process.env.CASHFREE_ENV || "TEST";
-
-export const CASHFREE_BASE_URL =
-    CASHFREE_ENV === "PROD" ? "https://api.cashfree.com/pg" : "https://sandbox.cashfree.com/pg";
+export function getCashfreeBaseUrl(): string {
+    const env = process.env.CASHFREE_ENV || "TEST";
+    return env === "PROD" ? "https://api.cashfree.com/pg" : "https://sandbox.cashfree.com/pg";
+}
 
 export const CREDIT_PACKS = {
     PACK_30: {
@@ -56,7 +56,7 @@ export async function cashFreeRequest<T>(
     method: "GET" | "POST",
     body?: object
 ): Promise<T> {
-    const response = await fetch(`${CASHFREE_BASE_URL}/${endpoint}`, {
+    const response = await fetch(`${getCashfreeBaseUrl()}/${endpoint}`, {
         method,
         headers: {
             "Content-Type": "application/json",
@@ -79,7 +79,7 @@ export async function cashFreeRequest<T>(
 export async function createCashfreeOrder(
     payload: CashfreeOrderPayload
 ): Promise<CashfreeOrderResponse> {
-    return cashFreeRequest<CashfreeOrderResponse>("/orders", "POST", payload);
+    return cashFreeRequest<CashfreeOrderResponse>("orders", "POST", payload);
 }
 
 export function verifyCashfreeWebhook(

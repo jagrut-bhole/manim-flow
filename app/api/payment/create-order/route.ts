@@ -2,15 +2,21 @@ import prisma from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/helpers/authHelpers";
 import { NextResponse, NextRequest } from "next/server";
 import { redis } from "@/lib/upstash-redis/redis";
-import { cacheKeys } from "@/lib/upstash-redis/cache";
 import {
     createCashfreeOrder,
+    getCashfreeBaseUrl,
     generateOrderId,
     CREDIT_PACKS,
     type CreditPackKey,
 } from "@/lib/payment/cashfree";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+// Cashfree PROD rejects http:// return URLs — force https when using PROD credentials
+function getSafeAppUrl(): string {
+    const isProd = (process.env.CASHFREE_ENV || "TEST") === "PROD";
+    return isProd ? APP_URL.replace(/^http:\/\//, "https://") : APP_URL;
+}
 
 export async function POST(req: NextRequest) {
     try {
@@ -69,7 +75,7 @@ export async function POST(req: NextRequest) {
 
                 // re-create session for this existing user
                 const orderDetails = await fetch(
-                    `${process.env.CASHFREE_BASE_URL}/orders/${existingOrderId}`,
+                    `${getCashfreeBaseUrl()}/orders/${existingOrderId}`,
                     {
                         headers: {
                             "x-api-version": "2023-08-01",
@@ -128,8 +134,8 @@ export async function POST(req: NextRequest) {
                 customer_phone: "9999999999", // required by Cashfree — update if you collect phone
             },
             order_meta: {
-                return_url: `${APP_URL}/pricing?payment=verifying&order_id=${orderId}`,
-                notify_url: `${APP_URL}/api/webhooks/cashfree`,
+                return_url: `${getSafeAppUrl()}/pricing?payment=verifying&order_id=${orderId}`,
+                notify_url: `${getSafeAppUrl()}/api/webhooks/cashfree`,
             },
             order_note: `${selectedPack.credits} credits for ManimFlow`,
         });
