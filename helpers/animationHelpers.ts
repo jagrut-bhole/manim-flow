@@ -1,10 +1,5 @@
 import prisma from "@/lib/prisma";
-import {
-    getCachedData,
-    CacheTTL,
-    cacheKeys,
-    setCachedData
-} from "@/lib/upstash-redis/cache"
+import { getCachedData, CacheTTL, cacheKeys, setCachedData } from "@/lib/upstash-redis/cache";
 
 export type CacheAnimations = {
     id: string;
@@ -16,7 +11,7 @@ export type CacheAnimations = {
     model: string | null;
     userId: string;
     createdAt: Date;
-}
+};
 
 export async function getUserAnimations(userId: string): Promise<CacheAnimations[] | null> {
     try {
@@ -51,7 +46,7 @@ export async function getUserAnimations(userId: string): Promise<CacheAnimations
                 model: true,
                 userId: true,
                 createdAt: true,
-            }
+            },
         });
 
         if (!animations) {

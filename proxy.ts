@@ -2,63 +2,69 @@ import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 export async function proxy(req: NextRequest) {
-  // NextAuth v5 changed the cookie name from "next-auth.session-token"
-  // to "authjs.session-token" (HTTP) or "__Secure-authjs.session-token" (HTTPS)
-  const isSecure = req.nextUrl.protocol === "https:";
-  const cookieName = isSecure
-    ? "__Secure-authjs.session-token"
-    : "authjs.session-token";
+    // NextAuth v5 changed the cookie name from "next-auth.session-token"
+    // to "authjs.session-token" (HTTP) or "__Secure-authjs.session-token" (HTTPS)
+    const isSecure = req.nextUrl.protocol === "https:";
+    const cookieName = isSecure ? "__Secure-authjs.session-token" : "authjs.session-token";
 
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-    cookieName,
-  });
+    const token = await getToken({
+        req,
+        secret: process.env.NEXTAUTH_SECRET,
+        cookieName,
+    });
 
-  const { pathname } = req.nextUrl;
+    const { pathname } = req.nextUrl;
 
-  const isAuthRoute =
-    pathname === "/" ||
-    pathname.startsWith("/signin") ||
-    pathname.startsWith("/signup");
+    const isAuthRoute =
+        pathname === "/" || pathname.startsWith("/signin") || pathname.startsWith("/signup");
 
-  const protectedRoutes = [
-    "/dashboard",
-    "/result",
-    "/playground",
-    "/profile",
-    "/gallery",
-  ];
+    const protectedRoutes = [
+        "/dashboard",
+        "/result",
+        "/playground",
+        "/profile",
+        "/gallery",
+        "/api-keys",
+        "/admin",
+    ];
 
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route),
-  );
+    const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
-  // Signed-in user visiting landing / signin / signup → send to dashboard
-  if (token && isAuthRoute) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
+    // Signed-in user visiting landing / signin / signup → send to dashboard or admin
+    if (token && isAuthRoute) {
+        if (token.isAdmin) {
+            return NextResponse.redirect(new URL("/admin", req.url));
+        }
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
 
-  // Unauthenticated user visiting a protected route → send to signin
-  if (!token && isProtectedRoute) {
-    const loginUrl = new URL("/signin", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
+    // Unauthenticated user visiting a protected route → send to signin
+    if (!token && isProtectedRoute) {
+        const loginUrl = new URL("/signin", req.url);
+        loginUrl.searchParams.set("callbackUrl", pathname);
+        return NextResponse.redirect(loginUrl);
+    }
 
-  return NextResponse.next();
+    // Authenticated non-admin visiting /admin → send to dashboard
+    if (token && !token.isAdmin && pathname.startsWith("/admin")) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/",
-    "/dashboard/:path*",
-    "/signin",
-    "/signup",
-    "/verify-code/:path*",
-    "/result/:path*",
-    "/playground/:path*",
-    "/profile/:path*",
-    "/gallery/:path*",
-  ],
+    matcher: [
+        "/",
+        "/dashboard/:path*",
+        "/signin",
+        "/signup",
+        "/verify-code/:path*",
+        "/result/:path*",
+        "/playground/:path*",
+        "/profile/:path*",
+        "/gallery/:path*",
+        "/api-keys/:path*",
+        "/admin/:path*",
+    ],
 };

@@ -1,10 +1,5 @@
 import prisma from "@/lib/prisma";
-import {
-    getCachedData,
-    setCachedData,
-    CacheTTL,
-    cacheKeys,
-} from "@/lib/upstash-redis/cache";
+import { getCachedData, setCachedData, CacheTTL, cacheKeys } from "@/lib/upstash-redis/cache";
 import { auth } from "@/lib/auth";
 import { checkAndResetCredit } from "@/lib/upstash-redis/creditReset";
 import { redis } from "@/lib/upstash-redis/redis";
@@ -13,11 +8,9 @@ export type CacheUser = {
     id: string;
     email: string;
     name: string;
-    credits: Number;
-    plan: string; 
-    creditsResetAt: Date | null,
-    createdAt: Date | null,
-
+    credits: number;
+    creditsResetAt: Date | null;
+    createdAt: Date | null;
 };
 
 export async function getAuthenticatedUser(): Promise<CacheUser | null> {
@@ -50,7 +43,7 @@ export async function getAuthenticatedUser(): Promise<CacheUser | null> {
                 name: true,
                 email: true,
                 credits: true,
-                plan: true,
+                purchasedCredits: true,
                 creditsResetAt: true,
                 createdAt: true,
             },
@@ -60,9 +53,14 @@ export async function getAuthenticatedUser(): Promise<CacheUser | null> {
             return null;
         }
 
-        await setCachedData(cacheKey, user, CacheTTL.user);
+        const userWithTotalCredits = {
+            ...user,
+            credits: user.credits + user.purchasedCredits,
+        };
 
-        return user;
+        await setCachedData(cacheKey, userWithTotalCredits, CacheTTL.user);
+
+        return userWithTotalCredits;
     } catch (error) {
         console.log("Error getting authenticated user: ", error);
         return null;
@@ -71,7 +69,6 @@ export async function getAuthenticatedUser(): Promise<CacheUser | null> {
 
 export async function getUserCredits(userId: string) {
     try {
-
         await checkAndResetCredit(userId);
 
         const cacheKey = cacheKeys.credits(userId);
@@ -79,18 +76,21 @@ export async function getUserCredits(userId: string) {
 
         if (cachedData !== null) {
             console.log("Cache Hitt...");
+
             const resetAt = await prisma.user.findUnique({
                 where: {
-                    id: userId
+                    id: userId,
                 },
                 select: {
-                    creditsResetAt: true
-                }
-            })
+                    creditsResetAt: true,
+                    credits: true,
+                    purchasedCredits: true,
+                },
+            });
             return {
                 credits: cachedData,
                 creditsResetAt: resetAt?.creditsResetAt ?? null,
-            }
+            };
         }
 
         console.log("Cache Miss...");
@@ -102,17 +102,23 @@ export async function getUserCredits(userId: string) {
             },
             select: {
                 credits: true,
+                purchasedCredits: true,
                 creditsResetAt: true,
-            }
+            },
         });
 
         if (!userCredits) {
             return null;
         }
 
-        await redis.set(cacheKey, userCredits.credits);
+        const totalCredits = userCredits.credits + userCredits.purchasedCredits;
 
-        return userCredits;
+        await redis.set(cacheKey, totalCredits);
+
+        return {
+            credits: totalCredits,
+            creditsResetAt: userCredits.creditsResetAt,
+        };
     } catch (error) {
         console.log("Error getting user credits: ", error);
         return null;
